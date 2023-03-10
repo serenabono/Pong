@@ -49,15 +49,15 @@ python runStatistics.py -m s -p BoltzmannAgent -l v3 -s '{"epochs":100,"trained_
 
 
 
-import breakoutLayout
+import pongLayout
 import sys
 import random
 import os
 from QLearningAgent import *
 from search import *
-from breakoutTransitionFunction import *
+from pongTransitionFunction import *
 import semanticNoise
-from breakout import ClassicGameRules
+from pong import ClassicGameRules
 import noise
 import json
 def default(str):
@@ -204,7 +204,7 @@ def train_epoch(transitionMatrixTree, n_training_steps, rules, pacman, ghosts, l
         game = rules.newGame(layout, pacman, ghosts,
                              gameDisplay, 1, catchExceptions=False)
         transitionMatrixTree.state = game.state
-        game.breakoutTransitionFunctionTree = transitionMatrixTree.copy()
+        game.pongTransitionFunctionTree = transitionMatrixTree.copy()
         pacman.agent.set_trainable(trainable=True)
         game.run(i, n_training_steps, perturbingagents=False)
     pass
@@ -219,7 +219,7 @@ def test_epoch(transitionMatrixTree, n_testing_steps, rules, pacman, ghosts, lay
         game = rules.newGame(layout, pacman, ghosts,
                              gameDisplay, 1, catchExceptions=False)
         transitionMatrixTree.state = game.state
-        game.breakoutTransitionFunctionTree = transitionMatrixTree.copy()
+        game.pongTransitionFunctionTree = transitionMatrixTree.copy()
         pacman.agent.set_trainable(trainable=False)
         game.run(i, n_testing_steps, perturbingagents=False)
         games.append(game)
@@ -311,7 +311,7 @@ def runExpectedValue(pacman, ghosts, layout, display, file_to_be_loaded=None, ap
             game = rules.newGame(layout, pacman, ghosts,
                                  display, 1, catchExceptions=False)
             transitionMatrixTree.state = game.state
-            game.breakoutTransitionFunctionTree = transitionMatrixTree.copy()
+            game.pongTransitionFunctionTree = transitionMatrixTree.copy()
             game.run(i, trained_agents, perturbingagents=False)
             games.append(game)
 

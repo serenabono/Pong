@@ -13,7 +13,7 @@
 
 import numpy as np
 import random
-from breakout import BarActions, BreakoutGameState, BarRules, BallRules, Directions, BallActions
+from pong import BarActions, PongGameState, BarRules, BallRules, Directions, BallActions
 ##############################
 #  TRANSITION FUNCTION CODE  #
 ##############################
@@ -28,7 +28,7 @@ class TransitionMatrixDicTree():
         self.currentStateNum = 0
         self.stateDic = {}
         self.keyDict = {}
-        initState = BreakoutGameState()
+        initState = PongGameState()
         initState.initialize(layout)
         self.state = initState
         self.queue = []
@@ -140,7 +140,7 @@ class TransitionMatrixDicTree():
                 successor_element["id"] = (
                     current_element["id"] + 1) % self.numAgents
 
-                successor_element["state"] = BreakoutGameState(
+                successor_element["state"] = PongGameState(
                     current_element["state"])
 
                 successor_element["state"] = current_element["state"].generateSuccessor(

@@ -34,9 +34,9 @@ description for details.
 Good luck and happy searching!
 """
 
-from breakout import Directions
-from breakout import Agent
-from breakout import Actions
+from pong import Directions
+from pong import Agent
+from pong import Actions
 import util
 import time
 import search

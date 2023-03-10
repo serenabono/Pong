@@ -39,13 +39,13 @@ code to run a game.  This file is divided into three sections:
 To play your first game, type 'python bar.py' from the command line.
 The keys are 'a', 's', 'd', and 'w' to move (or arrow keys).  Have fun!
 """
-import breakoutLayout as layout
+import pongLayout as layout
 import sys
 import random
 import os
 from QLearningAgent import *
-from breakoutTransitionFunction import *
-from breakout import *
+from pongTransitionFunction import *
+from pong import *
 from search import *
 
 ###################################################
@@ -154,7 +154,7 @@ def readCommand(argv):
             agentOpts['numTraining'] = options.numTraining
 
     # Choose a ball agent
-    ballType = getattr(__import__("breakout"), 'Ball')
+    ballType = getattr(__import__("pong"), 'Ball')
     args['ball'] = ballType(1) 
 
     args['numGames'] = options.numGames
@@ -198,7 +198,7 @@ def runGames(layout, bar, ball, numGames, numTraining=0, catchExceptions=False, 
     from noise import GaussianNoise
     from semanticNoise import DistributedNoise
 
-    rules = BreakoutClassicGameRules(timeout)
+    rules = PongClassicGameRules(timeout)
     games = []
 
     # define transition function

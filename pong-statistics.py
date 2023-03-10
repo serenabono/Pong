@@ -48,14 +48,14 @@ python runStatistics.py -m s -p BoltzmannAgent -l v3 -s '{"epochs":100,"trained_
 
 
 
-import breakoutLayout
+import pongLayout
 import sys
 import random
 import os
 from QLearningAgent import *
 from search import *
-from breakoutTransitionFunction import *
-from breakout import BreakoutClassicGameRules
+from pongTransitionFunction import *
+from pong import PongClassicGameRules
 import json
 
 def default(str):
@@ -143,7 +143,7 @@ def readCommand(argv):
         random.seed('cs188')
 
     # Choose a layout
-    args['layout'] = breakoutLayout.getLayout(options.layout)
+    args['layout'] = pongLayout.getLayout(options.layout)
     if args['layout'] == None:
         raise Exception("The layout " + options.layout + " cannot be found")
 
@@ -168,8 +168,8 @@ def readCommand(argv):
     except:
         args['noiseOpts'] = {}
 
-    agentOpts['width'] = breakoutLayout.getLayout(options.layout).width
-    agentOpts['height'] = breakoutLayout.getLayout(options.layout).height
+    agentOpts['width'] = pongLayout.getLayout(options.layout).width
+    agentOpts['height'] = pongLayout.getLayout(options.layout).height
 
     bar = agentType(agentOpts)  # Instantiate bar with agentArgs
     args['bar'] = bar
@@ -186,7 +186,7 @@ def readCommand(argv):
 
     # Choose a ghost agent
     # Choose a ball agent
-    ballType = getattr(__import__("breakout"), 'Ball')
+    ballType = getattr(__import__("pong"), 'Ball')
     args['ball'] = ballType(1) 
 
 
@@ -364,7 +364,7 @@ def runStatistics(bar, barName, barArgs, ball, layout, display, file_to_be_loade
     import __main__
     __main__.__dict__['_display'] = display
 
-    rules = BreakoutClassicGameRules(timeout)
+    rules = PongClassicGameRules(timeout)
 
     stats = np.zeros(
         [trained_agents, epochs // n_training_steps], dtype=np.float32)
@@ -418,7 +418,7 @@ def runLearnability(bar, barName, barArgs, ball, layout, display, file_to_be_loa
     import __main__
     __main__.__dict__['_display'] = display
 
-    rules = BreakoutClassicGameRules(timeout)
+    rules = PongClassicGameRules(timeout)
 
     stats = np.zeros(
         [trained_agents, epochs // n_training_steps], dtype=np.float32)
@@ -463,7 +463,7 @@ def runEnsembleAgents(bar, barName, barArgs, ball, layout, display, file_to_be_l
     import __main__
     __main__.__dict__['_display'] = display
 
-    rules = BreakoutClassicGameRules(timeout)
+    rules = PongClassicGameRules(timeout)
 
     stats = np.zeros(
         [trained_agents, epochs // n_training_steps], dtype=np.float32)
@@ -524,7 +524,7 @@ def runGenralization(bar, barName, barArgs, ball, layout, display, file_to_be_lo
     import __main__
     __main__.__dict__['_display'] = display
 
-    rules = BreakoutClassicGameRules(timeout)
+    rules = PongClassicGameRules(timeout)
 
     stats = np.zeros(
         [trained_agents, len(NOISY_ARGS), epochs // n_training_steps], dtype=np.float32)
@@ -591,7 +591,7 @@ def newTrainingMethod(bar, barName, barArgs, ball, layout, display, file_to_be_l
     import __main__
     __main__.__dict__['_display'] = display
 
-    rules = BreakoutClassicGameRules(timeout)
+    rules = PongClassicGameRules(timeout)
 
     stats = np.zeros(
         [trained_agents, epochs // n_training_steps], dtype=np.float32)

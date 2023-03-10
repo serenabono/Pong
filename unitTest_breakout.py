@@ -1,13 +1,13 @@
-from breakoutTransitionFunction import TransitionMatrixDicTree
-from breakout import *
-from breakoutRun import *
+from pongTransitionFunction import TransitionMatrixDicTree
+from pong import *
+from pongRun import *
 import pprint
 
 
 def constructTransitionTest(layout, bar, ball, numGames, numTraining=0, catchExceptions=False, timeout=30):
     import __main__
 
-    rules = BreakoutClassicGameRules(timeout)
+    rules = PongClassicGameRules(timeout)
     games = []
 
     game = rules.newGame(layout, bar, ball,

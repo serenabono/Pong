@@ -13,7 +13,7 @@
 
 
 from util import manhattanDistance
-from breakout import BreakoutGrid
+from pong import PongGrid
 import os
 import random
 
@@ -27,8 +27,8 @@ class Layout:
     def __init__(self, layoutText):
         self.width = len(layoutText[0])
         self.height= len(layoutText)
-        self.walls = BreakoutGrid(self.width, self.height, False)
-        self.blocks = BreakoutGrid(self.width, self.height, False)
+        self.walls = PongGrid(self.width, self.height, False)
+        self.blocks = PongGrid(self.width, self.height, False)
         self.agentPositions = []
         self.processLayoutText(layoutText)
         self.layoutText = layoutText
@@ -41,10 +41,10 @@ class Layout:
     def initializeVisibilityMatrix(self):
         global VISIBILITY_MATRIX_CACHE
         if reduce(str.__add__, self.layoutText) not in VISIBILITY_MATRIX_CACHE:
-            from breakout import Directions
+            from pong import Directions
             vecs = [(-0.5,0), (0.5,0),(0,-0.5),(0,0.5)]
             dirs = [Directions.DOWNLEFT, Directions.DOWNRIGHT, Directions.UPLEFT, Directions.UPRIGHT, Directions.UP, Directions.EAST, Directions.WEST]
-            vis = BreakoutGrid(self.width, self.height, {Directions.DOWNLEFT:set(), Directions.DOWNRIGHT:set(), Directions.UPLEFT:set(), Directions.UPRIGHT:set(), Directions.UP:set(), Directions.EAST:set(), Directions.WEST:set()})
+            vis = PongGrid(self.width, self.height, {Directions.DOWNLEFT:set(), Directions.DOWNRIGHT:set(), Directions.UPLEFT:set(), Directions.UPRIGHT:set(), Directions.UP:set(), Directions.EAST:set(), Directions.WEST:set()})
             for x in range(self.width):
                 for y in range(self.height):
                     if self.walls[x][y] == False:
@@ -127,10 +127,10 @@ class Layout:
             self.agentPositions.append( (1, (x, y) ) )
 def getLayout(name, back = 2):
     if name.endswith('.lay'):
-        layout = tryToLoad('breakoutLayouts/' + name)
+        layout = tryToLoad('pongLayouts/' + name)
         if layout == None: layout = tryToLoad(name)
     else:
-        layout = tryToLoad('breakoutLayouts/' + name + '.lay')
+        layout = tryToLoad('pongLayouts/' + name + '.lay')
         if layout == None: layout = tryToLoad(name + '.lay')
     if layout == None and back >= 0:
         curdir = os.path.abspath('.')

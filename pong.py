@@ -62,7 +62,7 @@ class Ball(BallAgent):
         return dist
 
 
-class BreakoutConfiguration(Configuration):
+class PongConfiguration(Configuration):
     """
     A Configuration holds the (x,y) coordinate of a character, along with its
     traveling direction.
@@ -110,13 +110,13 @@ class BreakoutConfiguration(Configuration):
         x, y = self.pos
         dx, dy = vector
 
-        return BreakoutConfiguration((x + dx, y+dy), direction)
+        return PongConfiguration((x + dx, y+dy), direction)
 
     def movetoAnyState(self, nxtstatepos, action):
-        return BreakoutConfiguration((nxtstatepos[0], nxtstatepos[1]), action)
+        return PongConfiguration((nxtstatepos[0], nxtstatepos[1]), action)
 
 
-class BreakoutAgentState(AgentState):
+class PongAgentState(AgentState):
     """
     AgentStates hold the state of an agent (configuration, speed, scared, etc).
     """
@@ -127,7 +127,7 @@ class BreakoutAgentState(AgentState):
         self.configuration = startConfiguration
 
     def __str__(self):
-        return "Breakout: " + str(self.configuration)
+        return "Pong: " + str(self.configuration)
 
     def __eq__(self, other):
         if other == None:
@@ -138,7 +138,7 @@ class BreakoutAgentState(AgentState):
         return hash(hash(self.configuration))
 
     def copy(self):
-        state = BreakoutAgentState(self.start, self.isBar)
+        state = PongAgentState(self.start, self.isBar)
         state.configuration = self.configuration
         return state
 
@@ -151,7 +151,7 @@ class BreakoutAgentState(AgentState):
         return self.configuration.getDirection()
 
 
-class BreakoutGrid(Grid):
+class PongGrid(Grid):
     """
     A 2-dimensional array of objects backed by a list of lists.  Data is accessed
     via grid[x][y] where (x,y) are positions on a Pacman map with x horizontal,
@@ -166,7 +166,7 @@ def reconstituteGrid(bitRep):
     if type(bitRep) is not type((1, 2)):
         return bitRep
     width, height = bitRep[:2]
-    return BreakoutGrid(width, height, bitRepresentation=bitRep[2:])
+    return PongGrid(width, height, bitRepresentation=bitRep[2:])
 
 
 ####################################
@@ -360,7 +360,7 @@ class BarActions(Actions):
     getSuccessor = staticmethod(getSuccessor)
 
 
-class BreakoutGameStateData(GameStateData):
+class PongGameStateData(GameStateData):
     """
 
     """
@@ -385,7 +385,7 @@ class BreakoutGameStateData(GameStateData):
         self.scoreChange = 0
 
     def deepCopy(self):
-        state = BreakoutGameStateData(self)
+        state = PongGameStateData(self)
         state.blocks = self.blocks.deepCopy()
         state.layout = self.layout.deepCopy()
         state._agentMoved = self._agentMoved
@@ -429,7 +429,7 @@ class BreakoutGameStateData(GameStateData):
 
     def __str__(self):
         width, height = self.layout.width, self.layout.height
-        map = BreakoutGrid(width, height)
+        map = PongGrid(width, height)
         if type(self.blocks) == type((1, 2)):
             self.blocks = reconstituteGrid(self.blocks)
         for x in range(width):
@@ -478,8 +478,8 @@ class BreakoutGameStateData(GameStateData):
 
         self.agentStates = []
         for isBar, pos in layout.agentPositions:
-            self.agentStates.append(BreakoutAgentState(
-                BreakoutConfiguration(pos, Directions.UP), isBar))
+            self.agentStates.append(PongAgentState(
+                PongConfiguration(pos, Directions.UP), isBar))
         self._destroyed = [False for a in self.blocks]
 
 
@@ -490,7 +490,7 @@ except:
     _BOINC_ENABLED = False
 
 
-class BreakoutGameState(GameState):
+class PongGameState(GameState):
     """
     A GameState specifies the full game state, including the blocks, capsules,
     agent configurations and score changes.
@@ -513,8 +513,8 @@ class BreakoutGameState(GameState):
     explored = set()
 
     def getAndResetExplored():
-        tmp = BreakoutGameState.explored.copy()
-        BreakoutGameState.explored = set()
+        tmp = PongGameState.explored.copy()
+        PongGameState.explored = set()
         return tmp
     getAndResetExplored = staticmethod(getAndResetExplored)
 
@@ -541,7 +541,7 @@ class BreakoutGameState(GameState):
             raise Exception('Can\'t generate a successor of a terminal state.')
 
         # Copy current state
-        state = BreakoutGameState(self)
+        state = PongGameState(self)
 
         # Let agent's logic deal with its action's effects on the board
         if agentIndex == 0:  # Pacman is moving
@@ -558,8 +558,8 @@ class BreakoutGameState(GameState):
         # Book keeping
         state.data._agentMoved = agentIndex
         state.data.score += state.data.scoreChange
-        BreakoutGameState.explored.add(self)
-        BreakoutGameState.explored.add(state)
+        PongGameState.explored.add(self)
+        PongGameState.explored.add(state)
         return state
 
     def movetoAnyState(self, nextstate, action, agentIndex, nxtstatepos):
@@ -572,7 +572,7 @@ class BreakoutGameState(GameState):
             raise Exception('Can\'t generate a successor of a terminal state.')
         
         # Copy current state
-        state = BreakoutGameState(self)
+        state = PongGameState(self)
         
         # Let agent's logic deal with its action's effects on the board
         if agentIndex == 0:  # Pacman is moving
@@ -592,8 +592,8 @@ class BreakoutGameState(GameState):
         state.data.score += state.data.scoreChange
         state.data.action = action
         
-        BreakoutGameState.explored.add(self)
-        BreakoutGameState.explored.add(state)
+        PongGameState.explored.add(self)
+        PongGameState.explored.add(state)
         return state
 
     def getLegalBarActions(self):
@@ -695,12 +695,12 @@ class BreakoutGameState(GameState):
         Generates a new state by copying information from its predecessor.
         """
         if prevState != None:  # Initial state
-            self.data = BreakoutGameStateData(prevState.data)
+            self.data = PongGameStateData(prevState.data)
         else:
-            self.data = BreakoutGameStateData()
+            self.data = PongGameStateData()
 
     def deepCopy(self):
-        state = BreakoutGameState(self)
+        state = PongGameState(self)
         state.data = self.data.deepCopy()
         return state
 
@@ -738,7 +738,7 @@ COLLISION_TOLERANCE = 0.7  # How close ghosts must be to Pacman to kill
 TIME_PENALTY = 1  # Number of points lost each round
 
 
-class BreakoutClassicGameRules(ClassicGameRules):
+class PongClassicGameRules(ClassicGameRules):
     """
     These game rules manage the control flow of a game, deciding when
     and how the game starts and ends.
@@ -749,9 +749,9 @@ class BreakoutClassicGameRules(ClassicGameRules):
 
     def newGame(self, layout, barAgent, ballAgent, display, quiet=False, catchExceptions=False):
         agents = [barAgent] + [ballAgent]
-        initState = BreakoutGameState()
+        initState = PongGameState()
         initState.initialize(layout)
-        game = BreakoutGame(agents, display, self, catchExceptions=catchExceptions)
+        game = PongGame(agents, display, self, catchExceptions=catchExceptions)
         game.state = initState
         self.initialState = initState.deepCopy()
         self.quiet = quiet
@@ -979,7 +979,7 @@ class BallRules(AgentRules):
     checkstatus = staticmethod(checkstatus)
 
 
-class BreakoutGame(Game):
+class PongGame(Game):
     """
     The Game manages the control flow, soliciting actions from agents.
     """
