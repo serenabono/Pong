@@ -28,11 +28,9 @@ class Layout:
         self.width = len(layoutText[0])
         self.height= len(layoutText)
         self.walls = PongGrid(self.width, self.height, False)
-        self.blocks = PongGrid(self.width, self.height, False)
         self.agentPositions = []
         self.processLayoutText(layoutText)
         self.layoutText = layoutText
-        self.totalblocks = len(self.blocks.asList())
         # self.initializeVisibilityMatrix()
 
     def getNumGhosts(self):
@@ -97,19 +95,19 @@ class Layout:
         The shape of the maze.  Each character
         represents a different type of object.
          % - Wall
-         B - blocks
-         _ - bar
+         | - bar
          . - ball
         Other characters are ignored.
         """
         bar = 1
-        maxY = self.height - 1
-        for y in range(self.height):
-            for x in range(self.width):
-                layoutChar = layoutText[maxY - y][x]
-                if layoutChar == '_' and bar == 0:
+        maxX = self.width - 1
+        for x in range(self.width):
+            for y in range(self.height):
+                layoutChar = layoutText[y][maxX - x]
+                if layoutChar == '|' and bar == 0:
+                    bar=1
                     continue
-                if layoutChar == '_':
+                if layoutChar == '|':
                     bar = 0
                 self.processLayoutChar(x, y, layoutChar)
         
@@ -119,10 +117,8 @@ class Layout:
     def processLayoutChar(self, x, y, layoutChar):
         if layoutChar == '%':
             self.walls[x][y] = True
-        elif layoutChar == 'B':
-            self.blocks[x][y] = True
-        elif layoutChar == '_':
-            self.agentPositions.append( (0, (x + 1, y) ) )
+        elif layoutChar == '|':
+            self.agentPositions.append( (0, (x, y+1) ) )
         elif layoutChar in ['.']:
             self.agentPositions.append( (1, (x, y) ) )
 def getLayout(name, back = 2):

@@ -307,8 +307,8 @@ class BarActions(Actions):
     A collection of static methods for manipulating move actions.
     """
     # Directions
-    _directions = {Directions.EAST:  (1, 0),
-                   Directions.WEST: (-1, 0),
+    _directions = {Directions.UP:  (0, 1),
+                   Directions.DOWN: (0, -1),
                    Directions.STOP:  (0, 0)}
 
     _directionsAsList = _directions.items()
@@ -316,18 +316,18 @@ class BarActions(Actions):
     TOLERANCE = .001
 
     def reverseDirection(action):
-        if action == Directions.EAST:
-            return Directions.WEST
-        if action == Directions.WEST:
-            return Directions.EAST
+        if action == Directions.UP:
+            return Directions.DOWN
+        if action == Directions.DOWN:
+            return Directions.UP
         return action
     reverseDirection = staticmethod(reverseDirection)
 
-    def vectorToDirection(dx):
-        if dx < 0:
-            return Directions.WEST
-        if dx > 0:
-            return Directions.EAST
+    def vectorToDirection(dy):
+        if dy < 0:
+            return Directions.UP
+        if dy > 0:
+            return Directions.DOWN
         return Directions.STOP
     vectorToDirection = staticmethod(vectorToDirection)
 
@@ -370,14 +370,10 @@ class PongGameStateData(GameStateData):
         Generates a new data packet by copying information from its predecessor.
         """
         if prevState != None:
-            self.blocks = prevState.blocks.shallowCopy()
             self.agentStates = self.copyAgentStates(prevState.agentStates)
             self.layout = prevState.layout
-            self._destroyed = prevState._destroyed
             self.score = prevState.score
 
-        self._blocksDestroyed = None
-        self._blocksAdded = None
         self._capsuleEaten = None
         self._agentMoved = None
         self._lose = False
@@ -386,11 +382,8 @@ class PongGameStateData(GameStateData):
 
     def deepCopy(self):
         state = PongGameStateData(self)
-        state.blocks = self.blocks.deepCopy()
         state.layout = self.layout.deepCopy()
         state._agentMoved = self._agentMoved
-        state._blocksDestroyed = self._blocksDestroyed
-        state._blocksAdded = self._blocksAdded
         return state
 
     def copyAgentStates(self, agentStates):
@@ -408,8 +401,6 @@ class PongGameStateData(GameStateData):
         # TODO Check for type of other
         if not self.agentStates == other.agentStates:
             return False
-        if not self.blocks == other.blocks:
-            return False
         if not self.score == other.score:
             return False
 
@@ -425,17 +416,16 @@ class PongGameStateData(GameStateData):
             except TypeError as e:
                 print(e)
                 # hash(state)
-        return int((hash(tuple(self.agentStates)) + 13*hash(self.blocks) + 113 + 7 * hash(self.score)) % 1048575)
+        return int((hash(tuple(self.agentStates)) + 113 + 7 * hash(self.score)) % 1048575)
 
     def __str__(self):
         width, height = self.layout.width, self.layout.height
         map = PongGrid(width, height)
-        if type(self.blocks) == type((1, 2)):
-            self.blocks = reconstituteGrid(self.blocks)
+   
         for x in range(width):
             for y in range(height):
-                blocks, walls = self.blocks, self.layout.walls
-                map[x][y] = self._blocksWallStr(blocks[x][y], walls[x][y])
+                walls = self.layout.walls
+                map[x][y] = self._WallStr(walls[x][y])
 
         for agentStateId in range(len(self.agentStates)):
             if self.agentStates[agentStateId] == None:
@@ -445,17 +435,15 @@ class PongGameStateData(GameStateData):
             x, y = [int(i) for i in nearestPoint(
                 self.agentStates[agentStateId].configuration.pos)]
             if agentStateId == 0:
-                for x1 in range(x-1, x+2):
-                    map[x1][y] = self._barStr()
+                for y1 in range(y-1, y+2):
+                    map[x][y1] = self._barStr()
             elif agentStateId == 1:
                 map[x][y] = self._ballStr()
 
         return str(map)
 
-    def _blocksWallStr(self, hasBlocks, hasWall):
-        if hasBlocks:
-            return 'B'
-        elif hasWall:
+    def _WallStr(self, hasWall):
+        if hasWall:
             return '%'
         else:
             return ' '
@@ -464,14 +452,12 @@ class PongGameStateData(GameStateData):
         return "."
 
     def _barStr(self):
-        return "_"
+        return "|"
 
     def initialize(self, layout):
         """
         Creates an initial game state from a layout array (see layout.py).
         """
-        self.blocks = layout.blocks.copy()
-        #self.capsules = []
         self.layout = layout
         self.score = 0
         self.scoreChange = 0
@@ -480,8 +466,6 @@ class PongGameStateData(GameStateData):
         for isBar, pos in layout.agentPositions:
             self.agentStates.append(PongAgentState(
                 PongConfiguration(pos, Directions.UP), isBar))
-        self._destroyed = [False for a in self.blocks]
-
 
 try:
     import boinc
@@ -492,7 +476,7 @@ except:
 
 class PongGameState(GameState):
     """
-    A GameState specifies the full game state, including the blocks, capsules,
+    A GameState specifies the full game state, including capsules,
     agent configurations and score changes.
 
     GameStates are used by the Game object to capture the actual state of the game and
@@ -581,7 +565,6 @@ class PongGameState(GameState):
             BarRules.movetoAnyState(state, nxtstatepos, None)
         else:                # A ghost is moving
             BallRules.movetoAnyState(state, nxtstatepos, state.data.agentStates[agentIndex].getDirection(), agentIndex)
-            state.data.blocks = nextstate.data.blocks
         
         # Time passes
         if agentIndex == 0:
@@ -634,9 +617,6 @@ class PongGameState(GameState):
     def getScore(self):
         return float(self.data.score)
 
-    def getNumblocks(self):
-        return self.data.blocks.count()
-
     def getWalls(self):
         """
         Returns a Grid of boolean wall indicator variables.
@@ -649,35 +629,8 @@ class PongGameState(GameState):
         """
         return self.data.layout.walls
 
-    def getblocks(self):
-        """
-        Returns a Grid of boolean blocks indicator variables.
-
-        Grids can be accessed via list notation, so to check
-        if there is blocks at (x,y), just call
-
-        currentblocks = state.getblocks()
-        if currentblocks[x][y] == True: ...
-        """
-        return self.data.blocks
-
-    def getblocks(self):
-        """
-        Returns a Grid of boolean wall indicator variables.
-
-        Grids can be accessed via list notation, so to check
-        if there is a wall at (x,y), just call
-
-        blocks = state.getblocks()
-        if blocks[x][y] == True: ...
-        """
-        return self.data.layout.blocks
-
     def hasWall(self, x, y):
         return self.data.layout.walls[x][y]
-
-    def hasblocks(self, x, y):
-        return self.data.blocks[x][y]
 
     def isLose(self):
         return self.data._lose
@@ -777,10 +730,6 @@ class PongClassicGameRules(ClassicGameRules):
             pass
             # print "Pacman died! Score: %d" % state.data.score
         game.gameOver = True
-
-    def getProgress(self, game):
-        return float(game.state.getNumblocks()) / self.initialState.getNumblocks()
-
 
 class BarRules(AgentRules):
     """
@@ -916,10 +865,6 @@ class BallRules(AgentRules):
         next = ballState.configuration.getPosition()
         nearest = nearestPoint(next)
         if manhattanDistance(nearest, next) <= 0.5:
-            # Remove blocks
-            if BallRules.consume(nearest, state):
-                ballState.configuration.direction = BallActions.reverseDirection(action, Directions.DOWN)
-                pass
             BallRules.checkstatus(state)
 
     applyAction = staticmethod(applyAction)
@@ -946,33 +891,11 @@ class BallRules(AgentRules):
 
     movetoAnyState = staticmethod(movetoAnyState)
 
-    def consume(position, state):
-        x, y = position
-        # Eat blocks
-        if state.data.blocks[x][y]:
-            state.data.scoreChange += 10
-            state.data.blocks = state.data.blocks.copy()
-            prev = (x - 1) % 3
-            post = 3 - prev
-            for x1 in range(x-prev,x+post):
-                state.data.blocks[x1][y] = False
-                state.data._blocksDestroyed = (x1, y)
-            numblocks = state.getNumblocks()
-            state.data.justConsumed = True
-            if numblocks == 0 and not state.data._lose:
-                state.data.scoreChange += 500
-            BallRules.checkstatus(state)
-
-    consume = staticmethod(consume)
-
     def checkstatus(state):
         # TODO: cache numFood?
-        numblocks = state.getNumblocks()
-        if numblocks == 0 and not state.data._lose:
-            state.data._win = True
         barx, bary = state.data.agentStates[0].configuration.pos
         ballx, bally = state.data.agentStates[1].configuration.pos
-        if bary == bally and abs(ballx - barx) > 1:
+        if barx == ballx and abs(bally - bary) > 1:
             state.data.scoreChange -= 500
             state.data._lose = True
 

@@ -85,7 +85,7 @@ class TransitionMatrixDicTree():
         return tree
 
     def computeHash(self, state, action):
-        hashstate = str(state) + str(state.getNumblocks()) + str(action)
+        hashstate = str(state) + str(action)
         return hashstate
 
     def getHashfromState(self, state):
@@ -129,7 +129,7 @@ class TransitionMatrixDicTree():
                 legal_actions = BallRules.getLegalActions(
                     current_element["state"], current_element["id"])
             
-            #print(current_element["state"])
+            print(current_element["state"])
             if current_element["state"].isWin() or current_element["state"].isLose():
                 self.transitionMatrixDic[currentelementhash] = {}
                 continue
