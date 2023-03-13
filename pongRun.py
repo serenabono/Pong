@@ -143,7 +143,8 @@ def readCommand(argv):
     agentOpts['height'] = layout.getLayout(options.layout).height
 
     bar = agentType(agentOpts)  # Instantiate bar with agentArgs
-    args['bar'] = bar
+    args['bars'] = [agentType(i) for i in range(2)]
+    
     bar.width = agentOpts['width']
     bar.height = agentOpts['height']
 
@@ -193,7 +194,7 @@ def loadAgent(bar, nographics):
                     ' is not specified in any *Agents.py.')
 
 
-def runGames(layout, bar, ball, numGames, numTraining=0, catchExceptions=False, timeout=30):
+def runGames(layout, bars, ball, numGames, numTraining=0, catchExceptions=False, timeout=30):
     import __main__
     from noise import GaussianNoise
     from semanticNoise import DistributedNoise
@@ -202,7 +203,7 @@ def runGames(layout, bar, ball, numGames, numTraining=0, catchExceptions=False, 
     games = []
 
     # define transition function
-    tree = TransitionMatrixDicTree(bar, ball, layout)
+    tree = TransitionMatrixDicTree(bars, ball, layout)
     tree.computeProbabilities()
     print(tree.nPossibleActions)
     print(tree.nStates)
@@ -250,7 +251,7 @@ if __name__ == '__main__':
     > python bar.py --help
     """
     args = readCommand(sys.argv[1:])  # Get game components based on input
-    runGames(args['layout'], args['bar'], args['ball'], args['numGames'], args['catchExceptions'], args['timeout'])
+    runGames(args['layout'], args['bars'], args['ball'], args['numGames'], args['catchExceptions'], args['timeout'])
 
     # import cProfile
     # cProfile.run("runGames( **args )")

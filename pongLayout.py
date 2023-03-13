@@ -99,13 +99,12 @@ class Layout:
          . - ball
         Other characters are ignored.
         """
-        bar = 1
         maxX = self.width - 1
         for x in range(self.width):
+            bar = 1
             for y in range(self.height):
                 layoutChar = layoutText[y][maxX - x]
                 if layoutChar == '|' and bar == 0:
-                    bar=1
                     continue
                 if layoutChar == '|':
                     bar = 0

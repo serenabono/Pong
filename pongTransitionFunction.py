@@ -24,7 +24,7 @@ class TransitionMatrixDicTree():
     Class containing all the information to generate the state transition matrix
     """
 
-    def __init__(self, barAgent, ballAgent, layout, noise=None, swaps=None):
+    def __init__(self, barAgents, ballAgent, layout, noise=None, swaps=None):
         self.currentStateNum = 0
         self.stateDic = {}
         self.keyDict = {}
@@ -33,7 +33,7 @@ class TransitionMatrixDicTree():
         self.state = initState
         self.queue = []
         self.startingIndex = 0
-        self.currentAgents = [barAgent] + \
+        self.currentAgents = barAgents + \
             [ballAgent]
         self.visited = {}
         self.graph = {}
@@ -42,8 +42,8 @@ class TransitionMatrixDicTree():
         self.nStates = (self.layout.width *
                         self.layout.height)**self.numAgents
         self.transitionMatrixDic = {}
-        self.actions = {Directions.WEST: 0,
-                        Directions.EAST: 1, Directions.STOP: 2}
+        self.actions = {Directions.UP: 0,
+                        Directions.DOWN: 1, Directions.STOP: 2}
         self.toactions = {v: k for k, v in self.actions.items()}
 
         self.ballactions = {Directions.UP: 3, Directions.UPLEFT: 4, Directions.UPRIGHT: 5,
@@ -106,6 +106,8 @@ class TransitionMatrixDicTree():
         therefore it is compressed in a dictionary containing as key the tostate value of the states and the actions
         for all non zero probability transitions.
         """
+
+        print("self.numAgents: ", self.numAgents)
         for el in range(self.numAgents):
             self.visited[el] = {}
             self.helperDic[el] = {}
@@ -130,10 +132,12 @@ class TransitionMatrixDicTree():
                     current_element["state"], current_element["id"])
             
             print(current_element["state"])
+            print(current_element["id"])
             if current_element["state"].isWin() or current_element["state"].isLose():
                 self.transitionMatrixDic[currentelementhash] = {}
                 continue
-
+            print("legal actions")
+            print(legal_actions)
             for action in legal_actions:
                 successor_element = {}
 
@@ -145,16 +149,17 @@ class TransitionMatrixDicTree():
 
                 successor_element["state"] = current_element["state"].generateSuccessor(
                     current_element["id"], action)
-
-                if current_element["id"] == 0:
-                    successor_element["prob"] = 1
-                    baraction = self.actions[action]
-                    successor_element["lastbaraction"] = baraction
-                else:
+                
+                if current_element["id"] == 2:
                     dist = self.currentAgents[current_element["id"]].getDistribution(
                         current_element["state"])
                     successor_element["prob"] = dist[action]
                     successor_element["lastbaraction"] = current_element["lastbaraction"]
+                else:
+                    successor_element["prob"] = 1
+                    baraction = self.actions[action]
+                    successor_element["lastbaraction"] = baraction
+                
 
                 successorelelmenthash = self.getHashfromState(
                     successor_element["state"])

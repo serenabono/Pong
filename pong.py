@@ -426,7 +426,7 @@ class PongGameStateData(GameStateData):
             for y in range(height):
                 walls = self.layout.walls
                 map[x][y] = self._WallStr(walls[x][y])
-
+        
         for agentStateId in range(len(self.agentStates)):
             if self.agentStates[agentStateId] == None:
                 continue
@@ -434,10 +434,10 @@ class PongGameStateData(GameStateData):
                 continue
             x, y = [int(i) for i in nearestPoint(
                 self.agentStates[agentStateId].configuration.pos)]
-            if agentStateId == 0:
+            if self.agentStates[agentStateId].isBar == 1:
                 for y1 in range(y-1, y+2):
                     map[x][y1] = self._barStr()
-            elif agentStateId == 1:
+            elif self.agentStates[agentStateId].isBar == 0:
                 map[x][y] = self._ballStr()
 
         return str(map)
@@ -700,8 +700,8 @@ class PongClassicGameRules(ClassicGameRules):
     def __init__(self, timeout=30):
         self.timeout = timeout
 
-    def newGame(self, layout, barAgent, ballAgent, display, quiet=False, catchExceptions=False):
-        agents = [barAgent] + [ballAgent]
+    def newGame(self, layout, barAgents, ballAgent, display, quiet=False, catchExceptions=False):
+        agents = barAgents + [ballAgent]
         initState = PongGameState()
         initState.initialize(layout)
         game = PongGame(agents, display, self, catchExceptions=catchExceptions)
@@ -821,15 +821,15 @@ class BallRules(AgentRules):
         revdir = BallActions.reverseDirection(dir, norm)
         possibleActions = BallActions.getPossibleActions(
             confball, state.data.layout)
-        if yball == ybar:
-            if xball < xbar and abs(xball - xbar) < 2:
+        if xball == xbar:
+            if yball < ybar and abs(yball - ybar) < 2:
                 if Directions.UPLEFT in possibleActions:
                     directionsAsList.append(Directions.UPLEFT)
                 else:
                     directionsAsList.append(Directions.UPRIGHT)
-            elif xball == xbar and abs(xball - xbar) < 2:
+            elif yball == ybar and abs(yball - ybar) < 2:
                 directionsAsList.append(Directions.UP) 
-            elif xball > xbar and abs(xball - xbar) < 2:
+            elif yball > ybar and abs(yball - ybar) < 2:
                 if Directions.UPRIGHT in possibleActions:
                     directionsAsList.append(Directions.UPRIGHT)
                 else:
@@ -883,9 +883,6 @@ class BallRules(AgentRules):
         # Eat
         next = ballState.configuration.getPosition()
         nearest = nearestPoint(next)
-        if manhattanDistance(nearest, next) <= 0.5:
-            # Remove food
-            BallRules.consume(nearest, state)
 
         BallRules.checkstatus(state)
 
