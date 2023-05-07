@@ -46,8 +46,8 @@ class TransitionMatrixDicTree():
                         Directions.DOWN: 1, Directions.STOP: 2}
         self.toactions = {v: k for k, v in self.actions.items()}
 
-        self.ballactions = {Directions.UP: 3, Directions.UPLEFT: 4, Directions.UPRIGHT: 5,
-                            Directions.DOWN: 6, Directions.DOWNLEFT: 7, Directions.DOWNRIGHT: 8}
+        self.ballactions = {Directions.EAST: 3, Directions.UPLEFT: 4, Directions.UPRIGHT: 5,
+                            Directions.WEST: 6, Directions.DOWNLEFT: 7, Directions.DOWNRIGHT: 8}
         self.toballactions = {v: k for k, v in self.ballactions.items()}
 
         self.nPossibleActions = len(self.actions) + len(self.ballactions)
@@ -111,6 +111,8 @@ class TransitionMatrixDicTree():
         for el in range(self.numAgents):
             self.visited[el] = {}
             self.helperDic[el] = {}
+        
+        baraction = 2
 
         self.queue.append(
             {"state": self.state, "id": 0, "lastbaraction": None})
@@ -124,20 +126,17 @@ class TransitionMatrixDicTree():
             if currentelementhash not in self.helperDic[current_element["id"]]:
                 self.helperDic[current_element["id"]][currentelementhash] = {}
 
-            if current_element["id"] == 0:
-                legal_actions = BarRules.getLegalActions(
+            if current_element["id"] == 2:
+                legal_actions = BallRules.getLegalActions(
                     current_element["state"])
             else:
-                legal_actions = BallRules.getLegalActions(
-                    current_element["state"], current_element["id"])
+                legal_actions = BarRules.getLegalActions(
+                current_element["state"], current_element["id"])
             
-            print(current_element["state"])
-            print(current_element["id"])
             if current_element["state"].isWin() or current_element["state"].isLose():
                 self.transitionMatrixDic[currentelementhash] = {}
                 continue
-            print("legal actions")
-            print(legal_actions)
+            
             for action in legal_actions:
                 successor_element = {}
 
@@ -155,12 +154,15 @@ class TransitionMatrixDicTree():
                         current_element["state"])
                     successor_element["prob"] = dist[action]
                     successor_element["lastbaraction"] = current_element["lastbaraction"]
+                elif current_element["id"] == 1:
+                    dist = self.currentAgents[current_element["id"]].getDistribution(
+                        current_element["state"])
+                    successor_element["prob"] = dist[action]
+                    successor_element["lastbaraction"] = current_element["lastbaraction"]
                 else:
                     successor_element["prob"] = 1
-                    baraction = self.actions[action]
-                    successor_element["lastbaraction"] = baraction
+                    successor_element["lastbaraction"] = action
                 
-
                 successorelelmenthash = self.getHashfromState(
                     successor_element["state"])
 
@@ -179,7 +181,6 @@ class TransitionMatrixDicTree():
             self.createMatrixrecursively(
                 self.startingIndex, currentelementhash, [], currentelementhash, prob=1)
         
-        #exit()
         self.factorLegal = len(self.transitionMatrixDic.keys())
         print("number of states: ", self.factorLegal)
 
@@ -188,7 +189,7 @@ class TransitionMatrixDicTree():
 
         if self.noise:
             self.computeCompleteMatrix()
-
+    
         # check correctness
         for fromstate in self.transitionMatrixDic:
             for throughaction in self.transitionMatrixDic[fromstate]:

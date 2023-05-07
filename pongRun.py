@@ -143,8 +143,13 @@ def readCommand(argv):
     agentOpts['height'] = layout.getLayout(options.layout).height
 
     bar = agentType(agentOpts)  # Instantiate bar with agentArgs
-    args['bars'] = [agentType(i) for i in range(2)]
-    
+    args['bars'] = []
+    args['bars'].append(agentType(0))
+
+    computerBarType = getattr(__import__("pong"), 'ComputerBar')
+    computerBar = computerBarType(1) 
+    args['bars'].append(computerBar)
+
     bar.width = agentOpts['width']
     bar.height = agentOpts['height']
 
@@ -156,7 +161,7 @@ def readCommand(argv):
 
     # Choose a ball agent
     ballType = getattr(__import__("pong"), 'Ball')
-    args['ball'] = ballType(1) 
+    args['ball'] = ballType(2) 
 
     args['numGames'] = options.numGames
     args['catchExceptions'] = options.catchExceptions
@@ -218,7 +223,7 @@ def runGames(layout, bars, ball, numGames, numTraining=0, catchExceptions=False,
         print(i)
         beQuiet = i < numTraining
 
-        game = rules.newGame(layout, bar, ball,
+        game = rules.newGame(layout, bars, ball,
                              None, beQuiet, catchExceptions)
         tree.state = game.state
         game.transitionFunctionTree = tree.copy()

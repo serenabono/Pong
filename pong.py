@@ -61,6 +61,52 @@ class Ball(BallAgent):
         dist.normalize()
         return dist
 
+class BallAgent(Agent):
+    def __init__(self, index):
+        self.index = index
+
+    def getAction(self, state, actlist, ensemble_agent=False):
+        dist = {}
+        for a in actlist.keys():
+            dist[a] = sum(actlist[a].values())
+        dist = util.Counter(dist)
+        if len(dist) == 0:
+            return Directions.STOP
+        else:
+            return actlist[util.chooseFromDistribution(dist)]
+
+    def getDistribution(self, state):
+        "Returns a Counter encoding a distribution over actions from the provided state."
+        util.raiseNotDefined()
+
+class ComputerBarAgent(Agent):
+    def __init__(self, index):
+        self.index = index
+
+    def getAction(self, state, actlist, ensemble_agent=False):
+        dist = {}
+        for a in actlist.keys():
+            dist[a] = sum(actlist[a].values())
+        dist = util.Counter(dist)
+        if len(dist) == 0:
+            return Directions.STOP
+        else:
+            return actlist[util.chooseFromDistribution(dist)]
+
+    def getDistribution(self, state):
+        "Returns a Counter encoding a distribution over actions from the provided state."
+        util.raiseNotDefined()
+
+class ComputerBar(ComputerBarAgent):
+    "A ghost that chooses a legal action uniformly at random."
+
+    def getDistribution(self, state):
+        dist = util.Counter()
+        for a in BarRules.getLegalActions(state, self.index):
+            dist[a] = 1.0
+        dist.normalize()
+        return dist
+
 
 class PongConfiguration(Configuration):
     """
@@ -209,18 +255,18 @@ class BallActions(Actions):
                    Directions.UPRIGHT:  (1, 1),
                    Directions.DOWNLEFT:  (-1, -1),
                    Directions.DOWNRIGHT:  (1, -1),
-                   Directions.UP:  (0, 1),
-                   Directions.DOWN: (0, -1)}
+                   Directions.WEST:  (-1, 0),
+                   Directions.EAST: (1, 0)}
 
     _directionsAsList = _directions.items()
 
     TOLERANCE = .001
 
     def reverseDirection(action, norm):
-        if action == Directions.DOWN:
-            return Directions.UP
-        if action == Directions.UP:
-            return Directions.DOWN
+        if action == Directions.EAST:
+            return Directions.WEST
+        if action == Directions.WEST:
+            return Directions.EAST
         if action == Directions.UPRIGHT:
             if norm == Directions.DOWN:
                 return Directions.DOWNRIGHT
@@ -261,10 +307,10 @@ class BallActions(Actions):
             return Directions.DOWNLEFT
         if dx < 0 and dy > 0:
             return Directions.UPLEFT
-        if dx == 0 and dy > 0:
-            return Directions.UP
-        if dx == 0 and dy < 0:
-            return Directions.DOWN
+        if dx < 0 and dy == 0:
+            return Directions.WEST
+        if dx > 0 and dy == 0:
+            return Directions.EAST
         if dx > 0 and dy > 0:
             return Directions.UPRIGHT
         if dx > 0 and dy < 0:
@@ -346,7 +392,7 @@ class BarActions(Actions):
             next_y = y_int + dy
             next_x = x_int + dx
 
-            if not layout.walls[next_x + 1*dx][next_y]:
+            if not layout.walls[next_x][next_y+ 1*dy]:
                 possible.append(dir)
 
         return possible
@@ -464,8 +510,13 @@ class PongGameStateData(GameStateData):
 
         self.agentStates = []
         for isBar, pos in layout.agentPositions:
+            if isBar:
+                direction = Directions.UP
+            else:
+                direction = Directions.EAST
             self.agentStates.append(PongAgentState(
-                PongConfiguration(pos, Directions.UP), isBar))
+                PongConfiguration(pos, direction), isBar))
+    
 
 try:
     import boinc
@@ -528,12 +579,13 @@ class PongGameState(GameState):
         state = PongGameState(self)
 
         # Let agent's logic deal with its action's effects on the board
-        if agentIndex == 0:  # Pacman is moving
+        if agentIndex == 2:  # Pacman is moving
+            BallRules.applyAction(state, action, agentIndex)
+        else:
             state.data._destroyed = [
                 False for i in range(state.getNumAgents())]
-            BarRules.applyAction(state, action)
-        else:                # A ghost is moving
-            BallRules.applyAction(state, action, agentIndex)
+            BarRules.applyAction(state, action, agentIndex)
+           # A ghost is moving    
 
         # Time passes
         if agentIndex == 0:
@@ -589,22 +641,20 @@ class PongGameState(GameState):
         """
         return self.generateSuccessor(0, action)
 
-    def getBarState(self):
+    def getBarState(self, agentIndex):
         """
         Returns an AgentState object for pacman (in game.py)
 
         state.pos gives the current position
         state.direction gives the travel vector
         """
-        return self.data.agentStates[0].copy()
+        return self.data.agentStates[agentIndex].copy()
 
     def getBarPosition(self):
         return self.data.agentStates[0].getPosition()
 
-    def getBallState(self, agentIndex):
-        if agentIndex == 0 or agentIndex >= self.getNumAgents():
-            raise Exception("Invalid index passed to getBallState", agentIndex)
-        return self.data.agentStates[agentIndex]
+    def getBallState(self):
+        return self.data.agentStates[2]
 
     def getBallPosition(self, agentIndex):
         if agentIndex == 0:
@@ -738,22 +788,22 @@ class BarRules(AgentRules):
     """
     BAR_SPEED = 1
 
-    def getLegalActions(state):
+    def getLegalActions(state, agentIndex):
         """
         Returns a list of possible actions.
         """
-        return BarActions.getPossibleActions(state.getBarState().configuration, state.data.layout)
+        return BarActions.getPossibleActions(state.getBarState(agentIndex).configuration, state.data.layout)
     getLegalActions = staticmethod(getLegalActions)
 
-    def applyAction(state, action):
+    def applyAction(state, action, agentIndex):
         """
         Edits the state to reflect the results of the action.
         """
-        legal = BarRules.getLegalActions(state)
+        legal = BarRules.getLegalActions(state, agentIndex)
         if action not in legal:
             raise Exception("Illegal action " + str(action))
 
-        barState = state.data.agentStates[0]
+        barState = state.data.agentStates[agentIndex]
 
         # Update Configuration
         vector = BarActions.directionToVector(action, BarRules.BAR_SPEED)
@@ -781,8 +831,8 @@ class BallRules(AgentRules):
     """
     BALL_SPEED = 1
 
-    def getNorm(state, agentIndex):
-        confball = state.getBallState(agentIndex).configuration
+    def getNorm(state):
+        confball = state.getBallState().configuration
         xball, yball = confball.pos
         dir = confball.direction
 
@@ -801,39 +851,61 @@ class BallRules(AgentRules):
             return norm[0]
         else:
             return norm
-        
+
     getNorm = staticmethod(getNorm)
 
-    def getLegalActions(state, agentIndex):
+    def getLegalActions(state, agentIndex=2):
         """
         Ghosts cannot stop, and cannot turn around unless they
         reach a dead end, but can turn 90 degrees at intersections.
         """
-        confball = state.getBallState(agentIndex).configuration
-        confbar = state.getBarState().configuration
+        confball = state.getBallState().configuration
+        confbar1 = state.getBarState(0).configuration
+        confbar2 = state.getBarState(1).configuration
 
         xball, yball = confball.pos
-        xbar, ybar = confbar.pos
-        
+        xbar1, ybar1 = confbar1.pos
+        xbar2, ybar2 = confbar2.pos
+
         directionsAsList = []
         dir = confball.direction
-        norm = BallRules.getNorm(state, agentIndex)
+        norm = BallRules.getNorm(state)
         revdir = BallActions.reverseDirection(dir, norm)
         possibleActions = BallActions.getPossibleActions(
             confball, state.data.layout)
-        if xball == xbar:
-            if yball < ybar and abs(yball - ybar) < 2:
+
+        if xball == xbar1:
+            if yball < ybar1 and abs(yball - ybar1) < 2:
                 if Directions.UPLEFT in possibleActions:
                     directionsAsList.append(Directions.UPLEFT)
                 else:
                     directionsAsList.append(Directions.UPRIGHT)
-            elif yball == ybar and abs(yball - ybar) < 2:
-                directionsAsList.append(Directions.UP) 
-            elif yball > ybar and abs(yball - ybar) < 2:
+            elif yball == ybar1 and abs(yball - ybar1) < 2:
+                directionsAsList.append(Directions.EAST) 
+            elif yball > ybar1 and abs(yball - ybar1) < 2:
+                if Directions.UPRIGHT in possibleActions:
+                    directionsAsList.append(Directions.UPRIGHT)
+                elif Directions.UPLEFT in possibleActions:
+                    directionsAsList.append(Directions.UPLEFT)
+                else:
+                    directionsAsList.append(Directions.DOWNRIGHT)
+            else:
+                return []
+        if xball == xbar2:
+            if yball < ybar2 and abs(yball - ybar2) < 2:
                 if Directions.UPRIGHT in possibleActions:
                     directionsAsList.append(Directions.UPRIGHT)
                 else:
                     directionsAsList.append(Directions.UPLEFT)
+            elif yball == ybar2 and abs(yball - ybar2) < 2:
+                directionsAsList.append(Directions.WEST) 
+            elif yball > ybar2 and abs(yball - ybar2) < 2:
+                if Directions.UPLEFT in possibleActions:
+                    directionsAsList.append(Directions.UPLEFT)
+                elif Directions.UPRIGHT in possibleActions:
+                    directionsAsList.append(Directions.UPRIGHT)
+                else:
+                    directionsAsList.append(Directions.DOWNLEFT)
             else:
                 return []
         elif dir in possibleActions:
@@ -850,7 +922,7 @@ class BallRules(AgentRules):
         """
         Edits the state to reflect the results of the action.
         """
-        legal = BallRules.getLegalActions(state, agentIndex)
+        legal = BallRules.getLegalActions(state)
         if action not in legal:
             raise Exception("Illegal action " + str(action))
 
@@ -890,11 +962,18 @@ class BallRules(AgentRules):
 
     def checkstatus(state):
         # TODO: cache numFood?
-        barx, bary = state.data.agentStates[0].configuration.pos
-        ballx, bally = state.data.agentStates[1].configuration.pos
-        if barx == ballx and abs(bally - bary) > 1:
+        bally, ballx = state.data.agentStates[2].configuration.pos
+        bar1y, bar1x = state.data.agentStates[0].configuration.pos
+        bar2y, bar2x = state.data.agentStates[1].configuration.pos
+
+        if bar1y == bally and abs(ballx - bar1x) > 1:
             state.data.scoreChange -= 500
             state.data._lose = True
+        
+        if bar1y == bally and abs(ballx - bar1x) > 1:
+            state.data.scoreChange += 500
+            state.data._win = True
+        
 
     checkstatus = staticmethod(checkstatus)
 
@@ -998,6 +1077,7 @@ class PongGame(Game):
             else:
                 observation = self.state.deepCopy()
             
+            print(self.state)
             if agentIndex == 0:
                 fromstatehash = self.transitionFunctionTree.getHashfromState(observation)
                 legal_actions = self.transitionFunctionTree.transitionMatrixDic[fromstatehash].keys()
@@ -1013,7 +1093,7 @@ class PongGame(Game):
             self.state = self.transitionFunctionTree.moveToPosition(
                         self.state, pacaction, nextstatehash, agentIndex)
             # Change the display
-            self.moveHistory.append((agentIndex, nextstatehash, self.transitionFunctionTree.toactions[pacaction]))
+            self.moveHistory.append((agentIndex, nextstatehash, self.transitionFunctionTree.actions[pacaction]))
 
             self.rules.process(self.state, self)
 
