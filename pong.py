@@ -858,6 +858,7 @@ class BallRules(AgentRules):
         """
         Ghosts cannot stop, and cannot turn around unless they
         reach a dead end, but can turn 90 degrees at intersections.
+        down-left corner (0,0)
         """
         confball = state.getBallState().configuration
         confbar1 = state.getBarState(0).configuration
@@ -867,53 +868,49 @@ class BallRules(AgentRules):
         xbar1, ybar1 = confbar1.pos
         xbar2, ybar2 = confbar2.pos
 
-        directionsAsList = []
+        directionsAsList = set()
         dir = confball.direction
         norm = BallRules.getNorm(state)
         revdir = BallActions.reverseDirection(dir, norm)
         possibleActions = BallActions.getPossibleActions(
             confball, state.data.layout)
-
+        
         if xball == xbar1:
             if yball < ybar1 and abs(yball - ybar1) < 2:
-                if Directions.UPLEFT in possibleActions:
-                    directionsAsList.append(Directions.UPLEFT)
+                if Directions.DOWNRIGHT in possibleActions:
+                    directionsAsList.add(Directions.DOWNRIGHT)
                 else:
-                    directionsAsList.append(Directions.UPRIGHT)
+                    directionsAsList.add(Directions.UPRIGHT)
             elif yball == ybar1 and abs(yball - ybar1) < 2:
-                directionsAsList.append(Directions.EAST) 
+                directionsAsList.add(Directions.EAST) 
             elif yball > ybar1 and abs(yball - ybar1) < 2:
                 if Directions.UPRIGHT in possibleActions:
-                    directionsAsList.append(Directions.UPRIGHT)
-                elif Directions.UPLEFT in possibleActions:
-                    directionsAsList.append(Directions.UPLEFT)
+                    directionsAsList.add(Directions.UPRIGHT)
                 else:
-                    directionsAsList.append(Directions.DOWNRIGHT)
+                    directionsAsList.add(Directions.DOWNRIGHT)
             else:
                 return []
         if xball == xbar2:
             if yball < ybar2 and abs(yball - ybar2) < 2:
-                if Directions.UPRIGHT in possibleActions:
-                    directionsAsList.append(Directions.UPRIGHT)
+                if Directions.DOWNLEFT in possibleActions:
+                    directionsAsList.add(Directions.DOWNLEFT)
                 else:
-                    directionsAsList.append(Directions.UPLEFT)
+                    directionsAsList.add(Directions.UPLEFT)
             elif yball == ybar2 and abs(yball - ybar2) < 2:
-                directionsAsList.append(Directions.WEST) 
+                directionsAsList.add(Directions.WEST) 
             elif yball > ybar2 and abs(yball - ybar2) < 2:
                 if Directions.UPLEFT in possibleActions:
-                    directionsAsList.append(Directions.UPLEFT)
-                elif Directions.UPRIGHT in possibleActions:
-                    directionsAsList.append(Directions.UPRIGHT)
+                    directionsAsList.add(Directions.UPLEFT)
                 else:
-                    directionsAsList.append(Directions.DOWNLEFT)
+                    directionsAsList.add(Directions.DOWNLEFT)
             else:
                 return []
         elif dir in possibleActions:
-            directionsAsList.append(dir)
+            directionsAsList.add(dir)
         elif revdir in possibleActions:
-            directionsAsList.append(revdir)
+            directionsAsList.add(revdir)
         else:
-            directionsAsList.append(possibleActions[0])
+            directionsAsList.add(possibleActions[0])
         return directionsAsList
 
     getLegalActions = staticmethod(getLegalActions)
@@ -962,6 +959,7 @@ class BallRules(AgentRules):
 
     def checkstatus(state):
         # TODO: cache numFood?
+
         bally, ballx = state.data.agentStates[2].configuration.pos
         bar1y, bar1x = state.data.agentStates[0].configuration.pos
         bar2y, bar2x = state.data.agentStates[1].configuration.pos
@@ -970,7 +968,7 @@ class BallRules(AgentRules):
             state.data.scoreChange -= 500
             state.data._lose = True
         
-        if bar1y == bally and abs(ballx - bar1x) > 1:
+        if bar2y == bally and abs(ballx - bar2x) > 1:
             state.data.scoreChange += 500
             state.data._win = True
         
@@ -1076,8 +1074,7 @@ class PongGame(Game):
                 self.unmute()
             else:
                 observation = self.state.deepCopy()
-            
-            print(self.state)
+
             if agentIndex == 0:
                 fromstatehash = self.transitionFunctionTree.getHashfromState(observation)
                 legal_actions = self.transitionFunctionTree.transitionMatrixDic[fromstatehash].keys()
@@ -1086,12 +1083,13 @@ class PongGame(Game):
                     actionstostateshashdict = self.transitionFunctionTree.getLegalActions(
                         fromstatehash, pacaction)
                     nextstatehash = self.transitionFunctionTree.generateSuccessor(actionstostateshashdict)                   
-                    self.state.data.agentStates[1].configuration.direction =  self.transitionFunctionTree.keyDict[nextstatehash].data.agentStates[1].configuration.getDirection()
+                    self.state.data.agentStates[2].configuration.direction =  self.transitionFunctionTree.keyDict[nextstatehash].data.agentStates[2].configuration.getDirection()
                     isInitial = False
             
             # Execute the action
             self.state = self.transitionFunctionTree.moveToPosition(
                         self.state, pacaction, nextstatehash, agentIndex)
+            
             # Change the display
             self.moveHistory.append((agentIndex, nextstatehash, self.transitionFunctionTree.actions[pacaction]))
 

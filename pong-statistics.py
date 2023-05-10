@@ -172,7 +172,13 @@ def readCommand(argv):
     agentOpts['height'] = pongLayout.getLayout(options.layout).height
 
     bar = agentType(agentOpts)  # Instantiate bar with agentArgs
-    args['bar'] = bar
+    args['bars'] = []
+    args['bars'].append(agentType(0))
+
+    computerBarType = getattr(__import__("pong"), 'ComputerBar')
+    computerBar = computerBarType(1) 
+    args['bars'].append(computerBar)
+
     bar.width = agentOpts['width']
     bar.height = agentOpts['height']
 
@@ -187,7 +193,7 @@ def readCommand(argv):
     # Choose a ghost agent
     # Choose a ball agent
     ballType = getattr(__import__("pong"), 'Ball')
-    args['ball'] = ballType(1) 
+    args['ball'] = ballType(2) 
 
 
     args['timeout'] = options.timeout
@@ -673,23 +679,23 @@ if __name__ == '__main__':
     """
     args = readCommand(sys.argv[1:])  # Get game components based on input
     if args['mode'] == 'l':
-        output = runLearnability(args['bar'], args['barAgentName'], args['agentOpts'],
+        output = runLearnability(args['bars'], args['barAgentName'], args['agentOpts'],
                                  args['ball'], args['layout'], args['display'], file_to_be_loaded=args['pretrainedAgentName'], applynoise=args['noiseOpts'], applyswaps=args["swapsArg"], **args['statOpts'])
         np.savetxt(args['outputStats']+".pkl", output,  delimiter=',')
     elif args['mode'] == 's':
-        output = runStatistics(args['bar'], args['barAgentName'], args['agentOpts'],
+        output = runStatistics(args['bars'], args['barAgentName'], args['agentOpts'],
                                args['ball'], args['layout'], args['display'], file_to_be_loaded=args['pretrainedAgentName'], applynoise=args['noiseOpts'],  applyswaps=args["swapsArg"], **args['statOpts'])
         np.savetxt(args['outputStats']+".pkl", output,  delimiter=',')
     elif args['mode'] == 'm':
-        output = newTrainingMethod(args['bar'], args['barAgentName'], args['agentOpts'],
+        output = newTrainingMethod(args['bars'], args['barAgentName'], args['agentOpts'],
                                args['ball'], args['layout'], args['display'], file_to_be_loaded=args['pretrainedAgentName'], applynoise=args['noiseOpts'],  applyswaps=args["swapsArg"], **args['statOpts'])
         np.savetxt(args['outputStats']+".pkl", output,  delimiter=',')
     elif args['mode'] == 'e':
-        output = runEnsembleAgents(args['bar'], args['barAgentName'], args['agentOpts'],
+        output = runEnsembleAgents(args['bars'], args['barAgentName'], args['agentOpts'],
                                args['ball'], args['layout'], args['display'], file_to_be_loaded=args['pretrainedAgentName'], applynoise=args['noiseOpts'],  applyswaps=args["swapsArg"], **args['statOpts'])
         np.savetxt(args['outputStats']+".pkl", output,  delimiter=',')
     elif args['mode'] == 'g':
-        output = runGenralization(args['bar'], args['barAgentName'], args['agentOpts'],
+        output = runGenralization(args['bars'], args['barAgentName'], args['agentOpts'],
                                   args['ball'], args['layout'], args['display'], file_to_be_loaded=args['pretrainedAgentName'], applynoise=args['noiseOpts'],  applyswaps=args["swapsArg"], **args['statOpts'])
         for n in range(len(NOISY_ARGS)):
             np.savetxt(args['outputStats'] +

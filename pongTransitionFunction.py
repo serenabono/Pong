@@ -89,8 +89,9 @@ class TransitionMatrixDicTree():
         return hashstate
 
     def getHashfromState(self, state):
-        balldir = state.data.agentStates[1].configuration.getDirection()
+        balldir = state.data.agentStates[2].configuration.getDirection()
         statehash = self.computeHash(state, balldir)
+ 
         if statehash not in self.stateDic:
             self.stateDic[statehash] = self.currentStateNum
             self.keyDict[self.currentStateNum] = state
@@ -136,7 +137,7 @@ class TransitionMatrixDicTree():
             if current_element["state"].isWin() or current_element["state"].isLose():
                 self.transitionMatrixDic[currentelementhash] = {}
                 continue
-            
+
             for action in legal_actions:
                 successor_element = {}
 
@@ -180,7 +181,7 @@ class TransitionMatrixDicTree():
         for currentelementhash in self.helperDic[0]:
             self.createMatrixrecursively(
                 self.startingIndex, currentelementhash, [], currentelementhash, prob=1)
-        
+
         self.factorLegal = len(self.transitionMatrixDic.keys())
         print("number of states: ", self.factorLegal)
 
@@ -239,8 +240,12 @@ class TransitionMatrixDicTree():
                 noise_generated = np.absolute(
                     np.random.normal(self.MEAN, self.STD, n_states))
                 for key, value in zip(self.transitionMatrixDic[fromstatehash][throughaction].keys(), self.transitionMatrixDic[fromstatehash][throughaction].values()):
-                    noise_generated[list(self.transitionMatrixDic).index(
+                    try:
+                        noise_generated[list(self.transitionMatrixDic).index(
                         key)] += value * self.factorLegal
+                    except:
+                        print(key)
+                        print(self.keyDict[key])
                 probabilities = noise_generated / sum(noise_generated)
                 self.transitionMatrixDic[fromstatehash][throughaction] = dict(
                     zip(self.transitionMatrixDic.keys(), probabilities))
