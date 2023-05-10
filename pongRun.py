@@ -144,14 +144,11 @@ def readCommand(argv):
 
     bar = agentType(agentOpts)  # Instantiate bar with agentArgs
     args['bars'] = []
-    args['bars'].append(agentType(0))
+    args['bars'].append(bar)
 
     computerBarType = getattr(__import__("pong"), 'ComputerBar')
     computerBar = computerBarType(1) 
     args['bars'].append(computerBar)
-
-    bar.width = agentOpts['width']
-    bar.height = agentOpts['height']
 
     # Don't display training games
     if options.numTraining > 0:
@@ -212,12 +209,6 @@ def runGames(layout, bars, ball, numGames, numTraining=0, catchExceptions=False,
     tree.computeProbabilities()
     print(tree.nPossibleActions)
     print(tree.nStates)
-
-    # # applying noise
-    # distributedNoise = DistributedNoise(tree)
-    # statesTobePerturbed = distributedNoise.generateToBePerturbedStatesMap()
-    # tree.applyNoiseToTransitionMatrix(GaussianNoise({"mean": 0.1, "std": 0.1, "scale": 1}), statesTobePerturbed)
-
     
     for i in range(numGames):
         print(i)
