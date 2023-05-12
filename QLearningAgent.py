@@ -156,9 +156,7 @@ class QLearningAgent:
         q_value_to_prob_map = {}
         for action in self.current_legal_actions:
             if ensemble_agent:
-                q_val = (1 - self.DISCOUNT_FACTOR)*self.q_values[self.current_state][action] + \
-                    self.DISCOUNT_FACTOR * \
-                    ensemble_agent.agent.q_values[ensemble_agent.agent.current_state][action]
+                q_val = self.q_values[self.current_state][action] + ensemble_agent.agent.q_values[ensemble_agent.agent.current_state][action]
             else:
                 q_val = self.q_values[self.current_state][action]
             q_value_to_prob_map[action] = math.e**(q_val/self.T)
@@ -167,7 +165,7 @@ class QLearningAgent:
 
         for action in self.current_legal_actions:
             q_value_to_prob_map[action] /= summation
-
+        
         # find max action
         max_action_temp = None
         max_val = float("-inf")

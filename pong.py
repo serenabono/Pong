@@ -107,6 +107,39 @@ class ComputerBar(ComputerBarAgent):
         dist.normalize()
         return dist
 
+class DirectionalComputerBar( ComputerBarAgent ):
+    "A ghost that prefers to rush Pacman, or flee when scared."
+    def __init__( self, index, prob_attack=0.8, prob_scaredFlee=0.8 ):
+        self.index = index
+        self.prob_attack = prob_attack
+        self.prob_scaredFlee = prob_scaredFlee
+
+    def getDistribution( self, state ):
+        # Read variables from state
+        barState = state.getBarState(self.index)
+        legalActions = BarRules.getLegalActions(state, self.index )
+        pos = state.getBarPosition( self.index )
+
+        speed = 1
+
+        actionVectors = [BarActions.directionToVector( a, speed ) for a in legalActions]
+        newPositions = [( pos[0]+a[0], pos[1]+a[1] ) for a in actionVectors]
+        ballPosition = state.getBallPosition()
+
+        # Select best actions given the state
+        distancesToBall = [manhattanDistance( pos, ballPosition ) for pos in newPositions]
+       
+        bestScore = min( distancesToBall )
+        bestProb = self.prob_attack
+        bestActions = [action for action, distance in zip( legalActions, distancesToBall ) if distance == bestScore]
+
+        # Construct distribution
+        dist = util.Counter()
+        for a in bestActions: dist[a] = bestProb / len(bestActions)
+        for a in legalActions: dist[a] += ( 1-bestProb ) / len(legalActions)
+        dist.normalize()
+        return dist
+
 
 class PongConfiguration(Configuration):
     """
@@ -650,16 +683,14 @@ class PongGameState(GameState):
         """
         return self.data.agentStates[agentIndex].copy()
 
-    def getBarPosition(self):
-        return self.data.agentStates[0].getPosition()
+    def getBarPosition(self, index):
+        return self.data.agentStates[index].getPosition()
 
     def getBallState(self):
         return self.data.agentStates[2]
 
-    def getBallPosition(self, agentIndex):
-        if agentIndex == 0:
-            raise Exception("Bar's index passed to getBallPosition")
-        return self.data.agentStates[1].getPosition()
+    def getBallPosition(self):
+        return self.data.agentStates[2].getPosition()
 
     def getNumAgents(self):
         return len(self.data.agentStates)
@@ -1085,7 +1116,7 @@ class PongGame(Game):
                     nextstatehash = self.transitionFunctionTree.generateSuccessor(actionstostateshashdict)                   
                     self.state.data.agentStates[2].configuration.direction =  self.transitionFunctionTree.keyDict[nextstatehash].data.agentStates[2].configuration.getDirection()
                     isInitial = False
-            
+                    
             # Execute the action
             self.state = self.transitionFunctionTree.moveToPosition(
                         self.state, pacaction, nextstatehash, agentIndex)

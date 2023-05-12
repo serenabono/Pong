@@ -6,7 +6,7 @@ import re
 
 
 
-for folder in glob.glob('./generalization*'):
+for folder in glob.glob('./generalization_*'):
     try:
         os.chdir(f"{folder}")
         print(folder)

@@ -497,8 +497,9 @@ def runEnsembleAgents(bars, barName, barArgs, ball, layout, display, file_to_be_
 
         transitionMatrixTreeList = []
         # normal environment agent
-        transitionMatrixTreeList.append(defineTransitionMatrix(
-                bars, ball, layout, file_to_be_loaded=file_to_be_loaded))
+        transitionMatrixTree = defineTransitionMatrix(
+                bars, ball, layout, file_to_be_loaded=file_to_be_loaded)
+        transitionMatrixTreeList.append(transitionMatrixTree)
         
         # perturbed environment agent
         if applynoise:
