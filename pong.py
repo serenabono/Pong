@@ -109,10 +109,9 @@ class ComputerBar(ComputerBarAgent):
 
 class DirectionalComputerBar( ComputerBarAgent ):
     "A ghost that prefers to rush Pacman, or flee when scared."
-    def __init__( self, index, prob_attack=0.8, prob_scaredFlee=0.8 ):
+    def __init__( self, index, prob_attack=0.9):
         self.index = index
         self.prob_attack = prob_attack
-        self.prob_scaredFlee = prob_scaredFlee
 
     def getDistribution( self, state ):
         # Read variables from state
@@ -1105,7 +1104,7 @@ class PongGame(Game):
                 self.unmute()
             else:
                 observation = self.state.deepCopy()
-
+            
             if agentIndex == 0:
                 fromstatehash = self.transitionFunctionTree.getHashfromState(observation)
                 legal_actions = self.transitionFunctionTree.transitionMatrixDic[fromstatehash].keys()

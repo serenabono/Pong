@@ -100,10 +100,10 @@ def readCommand(argv):
                       help=default(
                           'the agent TYPE in the barAgents module to use'),
                       metavar='TYPE', default='KeyboardAgent')
-    parser.add_option('-g', '--ball', dest='ball',
+    parser.add_option('-g', '--computerBar', dest='computerBar',
                       help=default(
                           'the ghost agent TYPE in the ghostAgents module to use'),
-                      metavar='TYPE', default='RandomGhost')
+                      metavar='TYPE', default='ComputerBar')
     parser.add_option('-k', '--numball', type='int', dest='numGhosts',
                       help=default('The maximum number of ball to use'), default=4)
     parser.add_option('-z', '--zoom', type='float', dest='zoom',
@@ -175,7 +175,7 @@ def readCommand(argv):
     bar = agentType(agentOpts)  # Instantiate bar with agentArgs
     args['bars'].append(agentType(0))
 
-    computerBarType = getattr(__import__("pong"), 'ComputerBar')
+    computerBarType = getattr(__import__("pong"), options.computerBar)
     computerBar = computerBarType(1) 
     args['bars'].append(computerBar)
 
