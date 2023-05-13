@@ -63,8 +63,13 @@ class TransitionMatrixDicTree():
         self.noise = noise
         print("noise level: ", self.noise)
         if self.noise:
-            self.STD = noise["std"]
-            self.MEAN = noise["mean"]
+            if self.noise != {"mean":0,"std":0}:
+                self.STD = noise["std"]
+                self.MEAN = noise["mean"]
+            else:
+                self.noise = None
+        
+        print("computer bar: ", vars(barAgents[1]) )
 
     def copy(self):
         tree = self

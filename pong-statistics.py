@@ -151,7 +151,7 @@ def readCommand(argv):
     
     barName = options.bar
     agentType = loadAgent(barName, 1)
-    agentOpts = parseAgentArgs(options.agentArgs)
+    agentOpts = json.loads(options.agentArgs)
 
     try:
         agentOpts = json.loads(options.agentArgs)
@@ -168,15 +168,12 @@ def readCommand(argv):
     except:
         args['noiseOpts'] = {}
 
-    agentOpts['width'] = pongLayout.getLayout(options.layout).width
-    agentOpts['height'] = pongLayout.getLayout(options.layout).height
-
     args['bars'] = []
-    bar = agentType(agentOpts)  # Instantiate bar with agentArgs
+    bar = agentType(agentOpts["bar"])  # Instantiate bar with agentArgs
     args['bars'].append(agentType(0))
 
-    computerBarType = getattr(__import__("pong"), options.computerBar)
-    computerBar = computerBarType(1) 
+    computerBarType = getattr(__import__("pong"), agentOpts["computer_bar"]["name"])
+    computerBar = computerBarType(prob=agentOpts["computer_bar"]["args"]["prob"], index=agentOpts["computer_bar"]["args"]["index"]) 
     args['bars'].append(computerBar)
 
     
@@ -483,43 +480,45 @@ def runEnsembleAgents(bars, barName, barArgs, ball, layout, display, file_to_be_
     stats = np.zeros(
         [trained_agents, epochs // n_training_steps], dtype=np.float32)
     
-    bar = bars[0]
+    bar = bars[0] 
+    computerBarType = getattr(__import__("pong"), 'ComputerBar')
+    computer_bar = computerBarType(1) 
 
     if bar.__class__.__name__ == "KeyboardAgent":
         barType = loadAgent(barName, 0)
     else:
         barType = loadAgent(barName, 1)
-    perturbedenv_bar = []
-    perturbedenv_bar.append(barType(barArgs))
-    perturbedenv_bar.append(bars[1])
+
+    perturbedenv_bar = barType(barArgs)
+    perturbedenv_computer_bar = bars[1]
 
     for i in range(trained_agents):
 
         transitionMatrixTreeList = []
         # normal environment agent
         transitionMatrixTree = defineTransitionMatrix(
-                bars, ball, layout, file_to_be_loaded=file_to_be_loaded)
+                [bar, computer_bar], ball, layout, file_to_be_loaded=file_to_be_loaded)
         transitionMatrixTreeList.append(transitionMatrixTree)
         
         # perturbed environment agent
         if applynoise:
             transitionMatrixTree = defineTransitionMatrix(
-                perturbedenv_bar, ball, layout, file_to_be_loaded=file_to_be_loaded, applynoise=applynoise)
+                [perturbedenv_bar, perturbedenv_computer_bar], ball, layout, file_to_be_loaded=file_to_be_loaded, applynoise=applynoise)
             transitionMatrixTreeList.append(transitionMatrixTree)
         if applyswaps:
             transitionMatrixTree = defineTransitionMatrix(
-                perturbedenv_bar, ball, layout, file_to_be_loaded=file_to_be_loaded,applyswaps=applyswaps)
+                [perturbedenv_bar, perturbedenv_computer_bar], ball, layout, file_to_be_loaded=file_to_be_loaded,applyswaps=applyswaps)
             transitionMatrixTreeList.append(transitionMatrixTree)
         
         for j in range(epochs // n_training_steps):
             print(j)
             if bar.__class__.__name__ != "KeyboardAgent":
                 train_epoch(transitionMatrixTreeList[0], n_training_steps,
-                            rules, bars, ball, layout, display)
+                            rules, [bar, computer_bar], ball, layout, display)
                 train_epoch(transitionMatrixTreeList[1], n_training_steps,
-                            rules, perturbedenv_bar, ball, layout, display)
+                            rules, [perturbedenv_bar, perturbedenv_computer_bar], ball, layout, display)
             score = np.mean(test_epoch(
-                transitionMatrixTreeList[1], n_testing_steps, rules, perturbedenv_bar, ball, layout, display, ensemble_agent=bars[0]))
+                transitionMatrixTreeList[1], n_testing_steps, rules, [perturbedenv_bar, perturbedenv_computer_bar], ball, layout, display, ensemble_agent=bars[0]))
             stats[i][j] = score
         print('trained agent ', i)
         print('Scores:       ', ', '.join([str(score) for score in stats[i]]))
@@ -534,8 +533,8 @@ def runEnsembleAgents(bars, barName, barArgs, ball, layout, display, file_to_be_
             barType = loadAgent(barName, 0)
         else:
             barType = loadAgent(barName, 1)
-        perturbedenv_bar[0] = barType(barArgs)
-        bars[0] = barType(barArgs)
+        perturbedenv_bar = barType(barArgs)
+        bar = barType(barArgs)
 
     return np.mean(stats, 0)
 

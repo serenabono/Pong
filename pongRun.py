@@ -146,7 +146,7 @@ def readCommand(argv):
     args['bars'] = []
     args['bars'].append(bar)
 
-    computerBarType = getattr(__import__("pong"), 'DirectionalComputerBar')
+    computerBarType = getattr(__import__("pong"), 'ComputerBar')
     computerBar = computerBarType(1) 
     args['bars'].append(computerBar)
 
