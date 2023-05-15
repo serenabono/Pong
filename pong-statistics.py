@@ -168,19 +168,21 @@ def readCommand(argv):
     except:
         args['statOpts'] = {}
 
-    args["bars"] = []
-    args["perturbOpts"] = []
+    args["bars"] = {}
+    args["perturbOpts"] = {}
 
     testingenv_bar, testingenv_computer_bar = defineBars(agentOpts, "test", options.bar)
-    args["bars"].append(testingenv_bar)
-    args["bars"].append(testingenv_computer_bar)
-    args["perturbOpts"].append(agentOpts["test"]["perturb"])
+    args["bars"]["test"] = {}
+    args["bars"]["test"]["bar"] = testingenv_bar
+    args["bars"]["test"]["computerbar"] = testingenv_computer_bar
+    args["perturbOpts"]["test"] = agentOpts["test"]["perturb"]
 
     if "ensemble" in agentOpts:
         ensembleenv_bar, ensembleenv_computer_bar = defineBars(agentOpts, "ensemble", options.bar)
-        args["bars"].append(ensembleenv_bar)
-        args["bars"].append(ensembleenv_computer_bar)
-        args["perturbOpts"].append(agentOpts["ensemble"]["perturb"])
+        args["bars"]["ensemble"] = {}
+        args["bars"]["ensemble"]["bar"] = ensembleenv_bar
+        args["bars"]["ensemble"]["computerbar"] = ensembleenv_computer_bar
+        args["perturbOpts"]["ensemble"] = agentOpts["ensemble"]["perturb"]
     
     # Don't display training games
     if 'numTrain' in agentOpts:
@@ -330,6 +332,7 @@ def defineTransitionMatrix(bars, ball, layout, file_to_be_loaded=None, file_to_b
     # define transition function
 
     bar=bars[0]
+
     if bar.__class__.__name__ == "BoltzmannAgent":
         # semanticDistribution, noiseType, noiseArgs
         try:
@@ -433,14 +436,14 @@ def runLearnability(bars, barName, barArgs, ball, layout, display, file_to_be_lo
 
     for i in range(trained_agents):
         transitionMatrixTree = defineTransitionMatrix(
-                bars, ball, layout, file_to_be_loaded=file_to_be_loaded, applyperturb=applyperturb[0])
+                [bars["test"]["bar"],bars["test"]["computerbar"]] , ball, layout, file_to_be_loaded=file_to_be_loaded, applyperturb=applyperturb["test"])
 
         for j in range(epochs // n_training_steps):
             print(j)
             train_epoch(transitionMatrixTree, n_training_steps,
-                            rules, bars, ball, layout, display)
+                            rules, [bars["test"]["bar"],bars["test"]["computerbar"]] , ball, layout, display)
             score = np.mean(test_epoch(
-                transitionMatrixTree, n_testing_steps, rules, bars, ball, layout, display))
+                transitionMatrixTree, n_testing_steps, rules, [bars["test"]["bar"],bars["test"]["computerbar"]] , ball, layout, display))
             stats[i][j] = score
         print('trained agent ', i)
         print('Scores:       ', ', '.join([str(score) for score in stats[i]]))
@@ -451,7 +454,7 @@ def runLearnability(bars, barName, barArgs, ball, layout, display, file_to_be_lo
                    f"{i}_training_agent.pkl", stats[i],  delimiter=',')
 
         barType = loadAgent(barName, 1)
-        bars[0] = barType(barArgs)
+        bars["test"]["bar"] = barType(barArgs)
 
     return np.mean(stats, 0)
 
@@ -464,32 +467,32 @@ def runEnsembleAgents(bars, barName, barArgs, ball, layout, display, file_to_be_
     stats = np.zeros(
         [trained_agents, epochs // n_training_steps], dtype=np.float32)
     
-    bar = bars[0] 
-    computer_bar = bars[1]
-    perturbedenv_bar = bars[2]
-    perturbedenv_computer_bar = bars[3]
+    bar = bars["test"]["bar"] 
+    computer_bar = bars["test"]["computerbar"]
+    perturbedenv_bar = bars["ensemble"]["bar"]
+    perturbedenv_computer_bar = bars["ensemble"]["computerbar"]
 
     for i in range(trained_agents):
 
-        transitionMatrixTreeList = []
+        transitionMatrixTreeList = {}
         # normal environment agent
         transitionMatrixTree = defineTransitionMatrix(
-                [bar, computer_bar], ball, layout, file_to_be_loaded=file_to_be_loaded, applyperturb=applyperturb[0])
-        transitionMatrixTreeList.append(transitionMatrixTree)
+                [bar, computer_bar], ball, layout, file_to_be_loaded=file_to_be_loaded, applyperturb=applyperturb["ensemble"])
+        transitionMatrixTreeList["ensemble"] = transitionMatrixTree
         
         transitionMatrixTree = defineTransitionMatrix(
-                [perturbedenv_bar, perturbedenv_computer_bar], ball, layout, file_to_be_loaded=file_to_be_loaded, applyperturb=applyperturb[1])
-        transitionMatrixTreeList.append(transitionMatrixTree)
+                [perturbedenv_bar, perturbedenv_computer_bar], ball, layout, file_to_be_loaded=file_to_be_loaded, applyperturb=applyperturb["test"])
+        transitionMatrixTreeList["test"] = transitionMatrixTree
         
         for j in range(epochs // n_training_steps):
             print(j)
             if bar.__class__.__name__ != "KeyboardAgent":
-                train_epoch(transitionMatrixTreeList[0], n_training_steps,
+                train_epoch(transitionMatrixTreeList["ensemble"], n_training_steps,
                             rules, [bar, computer_bar], ball, layout, display)
-                train_epoch(transitionMatrixTreeList[1], n_training_steps,
+                train_epoch(transitionMatrixTreeList["test"], n_training_steps,
                             rules, [perturbedenv_bar, perturbedenv_computer_bar], ball, layout, display)
             score = np.mean(test_epoch(
-                transitionMatrixTreeList[1], n_testing_steps, rules, [perturbedenv_bar, perturbedenv_computer_bar], ball, layout, display, ensemble_agent=bar))
+                transitionMatrixTreeList["test"], n_testing_steps, rules, [perturbedenv_bar, perturbedenv_computer_bar], ball, layout, display, ensemble_agent=bar))
             stats[i][j] = score
         print('trained agent ', i)
         print('Scores:       ', ', '.join([str(score) for score in stats[i]]))
@@ -517,7 +520,7 @@ def runGenralization(bars, barName, barArgs, ball, layout, display, file_to_be_l
     stats = np.zeros(
         [trained_agents, len(NOISY_ARGS), epochs // n_training_steps], dtype=np.float32)
     
-    bar= bars[0]
+    bar= bars["test"]["bar"] 
 
     for i in range(trained_agents):
         transitionMatrixTreeList = []

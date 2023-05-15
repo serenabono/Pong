@@ -5,7 +5,7 @@
 #SBATCH --job-name=ensemble
 
 #SBATCH -p short
-#SBATCH --mem=15G
+#SBATCH --mem=30G
 #SBATCH -o slurm_outputs_scripts/hostname_%j.out
 #SBATCH -e slurm_outputs_scripts/hostname_%j.err
 #SBATCH --mail-user=serena.bono@childrens.harvard.edu
@@ -23,8 +23,8 @@ agent="BoltzmannAgent"
 
 testingenv_mean=0
 testingenv_std=0
-testingenv_computer_bar_name="DirectionalComputerBar" 
-testingenv_computer_bar_args='{"index":1,"prob":0.8}'
+testingenv_computer_bar_name="ComputerBar" 
+testingenv_computer_bar_args='{"index":1,"prob":{}}'
 testingenv_computer_bararg='{"name":"'$testingenv_computer_bar_name'","args":'$testingenv_computer_bar_args'}'
 testingenv_noise_args='{"mean":'$testingenv_mean',"std":'$testingenv_std'}'
 testingenv_perturb='{"noise":'$testingenv_noise_args',"perm":{}}'
@@ -32,8 +32,8 @@ echo "testing env: " $testingenv_computer_bararg
 
 ensembleenv_mean=0
 ensembleenv_std=0
-ensembleenv_computer_bar_name="ComputerBar" 
-ensembleenv_computer_bar_args='{"index":1,"prob":{}}'
+ensembleenv_computer_bar_name="MoveMostlyWestComputerBar" 
+ensembleenv_computer_bar_args='{"index":1,"prob":0.8}'
 ensembleenv_computer_bararg='{"name":"'$ensembleenv_computer_bar_name'","args":'$ensembleenv_computer_bar_args'}'
 ensembleenv_noise_args='{"mean":'$ensembleenv_mean',"std":'$ensembleenv_std'}'
 ensembleenv_perturb='{"noise":'$ensembleenv_noise_args',"perm":{}}'
