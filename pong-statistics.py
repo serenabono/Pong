@@ -436,16 +436,14 @@ def runLearnability(bars, barName, barArgs, ball, layout, display, file_to_be_lo
         [trained_agents, epochs // n_training_steps], dtype=np.float32)
     
     # only the agent operated bar
-    bar = bars[0]
 
     for i in range(trained_agents):
         transitionMatrixTree = defineTransitionMatrix(
-                bars, ball, layout, file_to_be_loaded=file_to_be_loaded, applyperturb=applyperturb)
+                bars, ball, layout, file_to_be_loaded=file_to_be_loaded, applyperturb=applyperturb[0])
 
         for j in range(epochs // n_training_steps):
             print(j)
-            if bar.__class__.__name__ != "KeyboardAgent":
-                train_epoch(transitionMatrixTree, n_training_steps,
+            train_epoch(transitionMatrixTree, n_training_steps,
                             rules, bars, ball, layout, display)
             score = np.mean(test_epoch(
                 transitionMatrixTree, n_testing_steps, rules, bars, ball, layout, display))
@@ -458,11 +456,7 @@ def runLearnability(bars, barName, barArgs, ball, layout, display, file_to_be_lo
         np.savetxt(args['outputStats'] +
                    f"{i}_training_agent.pkl", stats[i],  delimiter=',')
 
-        #   reinitialize bar
-        if bar.__class__.__name__ == "KeyboardAgent":
-            barType = loadAgent(barName, 0)
-        else:
-            barType = loadAgent(barName, 1)
+        barType = loadAgent(barName, 1)
         bars[0] = barType(barArgs)
 
     return np.mean(stats, 0)
@@ -538,11 +532,7 @@ def runGenralization(bars, barName, barArgs, ball, layout, display, file_to_be_l
             for n in range(len(NOISY_ARGS)):
                 transitionMatrixTreeList.append(defineTransitionMatrix(
                     bars, ball, layout, file_to_be_loaded=file_to_be_loaded, applyperturb=NOISY_ARGS[n]))
-        if applyswaps: 
-            print("adding permutations...")   
-            for n in range(len(SWAP_LIST)):
-                transitionMatrixTreeList.append(defineTransitionMatrix(
-                    bars, ball, layout, file_to_be_loaded=file_to_be_loaded, applyswaps=SWAP_LIST[n]))
+
         for j in range(epochs // n_training_steps):
 
             if record_range and j >= record_range["min_range"] and j < record_range["max_range"]:
