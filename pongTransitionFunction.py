@@ -69,7 +69,7 @@ class TransitionMatrixDicTree():
             else:
                 self.noise = None
         
-        print("computer bar: ", vars(barAgents[1]) )
+        print("computer bar: ", vars(barAgents[1]), barAgents[1].__class__.__name__ )
 
     def copy(self):
         tree = self

@@ -74,6 +74,17 @@ def parseAgentArgs(str):
         opts[key] = val
     return opts
 
+def defineBars(agentOpts, flag, barName):
+
+    agentType = loadAgent(barName, 1)
+    if flag not in agentOpts:
+        return None, None
+    bar = agentType(agentOpts[flag]["bar"])  # Instantiate bar with agentArgs
+    computerBarType = getattr(__import__("pong"), agentOpts[flag]["computer_bar"]["name"])
+    computer_bar = computerBarType(prob=agentOpts[flag]["computer_bar"]["args"]["prob"], index=agentOpts[flag]["computer_bar"]["args"]["index"]) 
+
+    return bar, computer_bar
+
 def readCommand(argv):
     """
     Processes the command used to run bar from the command line.
@@ -126,8 +137,6 @@ def readCommand(argv):
                       metavar='TYPE', default='saved_agent.pkl')
     parser.add_option('-d', '--savedfFolder', dest='savedfFolder', help=default('Output file to save stats'),
                       metavar='TYPE', default='.')
-    parser.add_option('-n', '--noiseArgs', dest='noiseArgs',
-                      help='Comma separated values sent to noise. e.g. "opt1=val1,opt2,opt3=val3,noise=\{arg1=val1,arg2=val2\}"')
     parser.add_option('-x', '--numTraining', dest='numTraining', type='int',
                       help=default('How many episodes are training (suppresses output)'), default=0)
     parser.add_option('--frameTime', dest='frameTime', type='float',
@@ -148,36 +157,31 @@ def readCommand(argv):
         raise Exception("The layout " + options.layout + " cannot be found")
 
     # Choose a Pacman agent
-    
-    barName = options.bar
-    agentType = loadAgent(barName, 1)
     agentOpts = json.loads(options.agentArgs)
 
     try:
         agentOpts = json.loads(options.agentArgs)
     except:
         agentOpts = {}
-
     try:
         args['statOpts'] = json.loads(options.statArgs)
     except:
         args['statOpts'] = {}
 
-    try:
-        args['noiseOpts'] = json.loads(options.noiseArgs)
-    except:
-        args['noiseOpts'] = {}
+    args["bars"] = []
+    args["perturbOpts"] = []
 
-    args['bars'] = []
-    bar = agentType(agentOpts["bar"])  # Instantiate bar with agentArgs
-    args['bars'].append(agentType(0))
+    testingenv_bar, testingenv_computer_bar = defineBars(agentOpts, "test", options.bar)
+    args["bars"].append(testingenv_bar)
+    args["bars"].append(testingenv_computer_bar)
+    args["perturbOpts"].append(agentOpts["test"]["perturb"])
 
-    computerBarType = getattr(__import__("pong"), agentOpts["computer_bar"]["name"])
-    computerBar = computerBarType(prob=agentOpts["computer_bar"]["args"]["prob"], index=agentOpts["computer_bar"]["args"]["index"]) 
-    args['bars'].append(computerBar)
-
+    if "ensemble" in agentOpts:
+        ensembleenv_bar, ensembleenv_computer_bar = defineBars(agentOpts, "ensemble", options.bar)
+        args["bars"].append(ensembleenv_bar)
+        args["bars"].append(ensembleenv_computer_bar)
+        args["perturbOpts"].append(agentOpts["ensemble"]["perturb"])
     
-
     # Don't display training games
     if 'numTrain' in agentOpts:
         options.numQuiet = int(agentOpts['numTrain'])
@@ -194,7 +198,7 @@ def readCommand(argv):
 
     args['timeout'] = options.timeout
     args['agentOpts'] = agentOpts
-    args['barAgentName'] = barName
+    args['barAgentName'] = options.bar
     args['pretrainedAgentName'] = options.pretrainedAgent
     args['outputStats'] = options.outputStats
     args['swapsArg'] = options.swapsArg
@@ -328,7 +332,7 @@ def test_noisy_agents_epoch(transitionMatrixTreeList, n_testing_steps, rules, ba
     return across_agents_scores
 
 
-def defineTransitionMatrix(bars, ball, layout, file_to_be_loaded=None, file_to_be_saved=None, applynoise=None, applyswaps=None):
+def defineTransitionMatrix(bars, ball, layout, file_to_be_loaded=None, file_to_be_saved=None, applyperturb=None):
     # define transition function
 
     bar=bars[0]
@@ -356,11 +360,10 @@ def defineTransitionMatrix(bars, ball, layout, file_to_be_loaded=None, file_to_b
             print("starting a new agent from scratch ...")
 
     # only gaussian supported for now    
-    if applyswaps != None:
-        applyswaps = float(applyswaps)
-        transitionMatrixTree = TransitionMatrixDicTree(bars, ball, layout, swaps=applyswaps)
-    if applynoise != None:
-        transitionMatrixTree = TransitionMatrixDicTree(bars, ball, layout, noise=applynoise)
+    if applyperturb["perm"] != {}:
+        transitionMatrixTree = TransitionMatrixDicTree(bars, ball, layout, swaps=float(applyperturb["perm"]))
+    if applyperturb["noise"] != {}:
+        transitionMatrixTree = TransitionMatrixDicTree(bars, ball, layout, noise=applyperturb["noise"])
     else:
         transitionMatrixTree = TransitionMatrixDicTree(bars, ball, layout)
 
@@ -369,7 +372,7 @@ def defineTransitionMatrix(bars, ball, layout, file_to_be_loaded=None, file_to_b
     return transitionMatrixTree
 
 
-def runStatistics(bar, barName, barArgs, ball, layout, display, file_to_be_loaded=None, applynoise=None, applyswaps=None, epochs=1000, trained_agents=500, n_training_steps=10, n_testing_steps=10, record_range=None, run_untill=None, timeout=30):
+def runStatistics(bar, barName, barArgs, ball, layout, display, file_to_be_loaded=None, applyperturb=None, epochs=1000, trained_agents=500, n_training_steps=10, n_testing_steps=10, record_range=None, run_untill=None, timeout=30):
     import __main__
     __main__.__dict__['_display'] = display
 
@@ -381,9 +384,9 @@ def runStatistics(bar, barName, barArgs, ball, layout, display, file_to_be_loade
     for i in range(trained_agents):
         transitionMatrixTreeList = []
         transitionMatrixTreeList.append(defineTransitionMatrix(
-            bar, ball, layout, file_to_be_loaded=file_to_be_loaded, applynoise=None, applyswaps=applyswaps))
+            bar, ball, layout, file_to_be_loaded=file_to_be_loaded, applyperturb=None))
         transitionMatrixTreeList.append(defineTransitionMatrix(
-            bar, ball, layout, file_to_be_loaded=file_to_be_loaded, applynoise=applynoise, applyswaps=applyswaps))
+            bar, ball, layout, file_to_be_loaded=file_to_be_loaded, applyperturb=applyperturb))
 
         for j in range(epochs // n_training_steps):
 
@@ -423,7 +426,7 @@ def runStatistics(bar, barName, barArgs, ball, layout, display, file_to_be_loade
     return np.mean(stats, 0)
 
 
-def runLearnability(bars, barName, barArgs, ball, layout, display, file_to_be_loaded=None, applynoise=None, applyswaps=None, epochs=1000, trained_agents=500, n_training_steps=10, n_testing_steps=10, record_range=None, run_untill=None, timeout=30):
+def runLearnability(bars, barName, barArgs, ball, layout, display, file_to_be_loaded=None, applyperturb=None, epochs=1000, trained_agents=500, n_training_steps=10, n_testing_steps=10, record_range=None, run_untill=None, timeout=30):
     import __main__
     __main__.__dict__['_display'] = display
 
@@ -436,15 +439,8 @@ def runLearnability(bars, barName, barArgs, ball, layout, display, file_to_be_lo
     bar = bars[0]
 
     for i in range(trained_agents):
-        if applynoise:
-            transitionMatrixTree = defineTransitionMatrix(
-                bars, ball, layout, file_to_be_loaded=file_to_be_loaded, applynoise=applynoise)
-        elif applyswaps:
-            transitionMatrixTree = defineTransitionMatrix(
-                bars, ball, layout, file_to_be_loaded=file_to_be_loaded,applyswaps=applyswaps)
-        else:
-            transitionMatrixTree = defineTransitionMatrix(
-                bars, ball, layout, file_to_be_loaded=file_to_be_loaded)
+        transitionMatrixTree = defineTransitionMatrix(
+                bars, ball, layout, file_to_be_loaded=file_to_be_loaded, applyperturb=applyperturb)
 
         for j in range(epochs // n_training_steps):
             print(j)
@@ -471,7 +467,7 @@ def runLearnability(bars, barName, barArgs, ball, layout, display, file_to_be_lo
 
     return np.mean(stats, 0)
 
-def runEnsembleAgents(bars, barName, barArgs, ball, layout, display, file_to_be_loaded=None, applynoise=None, applyswaps=None, epochs=1000, trained_agents=500, n_training_steps=10, n_testing_steps=10, record_range=None, run_untill=None, timeout=30):
+def runEnsembleAgents(bars, barName, barArgs, ball, layout, display, file_to_be_loaded=None, applyperturb=None, epochs=1000, trained_agents=500, n_training_steps=10, n_testing_steps=10, record_range=None, run_untill=None, timeout=30):
     import __main__
     __main__.__dict__['_display'] = display
 
@@ -481,34 +477,21 @@ def runEnsembleAgents(bars, barName, barArgs, ball, layout, display, file_to_be_
         [trained_agents, epochs // n_training_steps], dtype=np.float32)
     
     bar = bars[0] 
-    computerBarType = getattr(__import__("pong"), 'ComputerBar')
-    computer_bar = computerBarType(1) 
-
-    if bar.__class__.__name__ == "KeyboardAgent":
-        barType = loadAgent(barName, 0)
-    else:
-        barType = loadAgent(barName, 1)
-
-    perturbedenv_bar = barType(barArgs)
-    perturbedenv_computer_bar = bars[1]
+    computer_bar = bars[1]
+    perturbedenv_bar = bars[2]
+    perturbedenv_computer_bar = bars[3]
 
     for i in range(trained_agents):
 
         transitionMatrixTreeList = []
         # normal environment agent
         transitionMatrixTree = defineTransitionMatrix(
-                [bar, computer_bar], ball, layout, file_to_be_loaded=file_to_be_loaded)
+                [bar, computer_bar], ball, layout, file_to_be_loaded=file_to_be_loaded, applyperturb=applyperturb[0])
         transitionMatrixTreeList.append(transitionMatrixTree)
         
-        # perturbed environment agent
-        if applynoise:
-            transitionMatrixTree = defineTransitionMatrix(
-                [perturbedenv_bar, perturbedenv_computer_bar], ball, layout, file_to_be_loaded=file_to_be_loaded, applynoise=applynoise)
-            transitionMatrixTreeList.append(transitionMatrixTree)
-        if applyswaps:
-            transitionMatrixTree = defineTransitionMatrix(
-                [perturbedenv_bar, perturbedenv_computer_bar], ball, layout, file_to_be_loaded=file_to_be_loaded,applyswaps=applyswaps)
-            transitionMatrixTreeList.append(transitionMatrixTree)
+        transitionMatrixTree = defineTransitionMatrix(
+                [perturbedenv_bar, perturbedenv_computer_bar], ball, layout, file_to_be_loaded=file_to_be_loaded, applyperturb=applyperturb[1])
+        transitionMatrixTreeList.append(transitionMatrixTree)
         
         for j in range(epochs // n_training_steps):
             print(j)
@@ -518,7 +501,7 @@ def runEnsembleAgents(bars, barName, barArgs, ball, layout, display, file_to_be_
                 train_epoch(transitionMatrixTreeList[1], n_training_steps,
                             rules, [perturbedenv_bar, perturbedenv_computer_bar], ball, layout, display)
             score = np.mean(test_epoch(
-                transitionMatrixTreeList[1], n_testing_steps, rules, [perturbedenv_bar, perturbedenv_computer_bar], ball, layout, display, ensemble_agent=bars[0]))
+                transitionMatrixTreeList[1], n_testing_steps, rules, [perturbedenv_bar, perturbedenv_computer_bar], ball, layout, display, ensemble_agent=bar))
             stats[i][j] = score
         print('trained agent ', i)
         print('Scores:       ', ', '.join([str(score) for score in stats[i]]))
@@ -528,18 +511,16 @@ def runEnsembleAgents(bars, barName, barArgs, ball, layout, display, file_to_be_
         np.savetxt(args['outputStats'] +
                    f"{i}_training_agent.pkl", stats[i],  delimiter=',')
 
-        #   reinitialize bars
-        if bar.__class__.__name__ == "KeyboardAgent":
-            barType = loadAgent(barName, 0)
-        else:
-            barType = loadAgent(barName, 1)
-        perturbedenv_bar = barType(barArgs)
+        # reinitialize agents
+        perturbedenv_barType = loadAgent(barName, 1) 
+        perturbedenv_bar = perturbedenv_barType(barArgs)
+        barType = loadAgent(barName, 1) 
         bar = barType(barArgs)
 
     return np.mean(stats, 0)
 
 
-def runGenralization(bars, barName, barArgs, ball, layout, display, file_to_be_loaded=None, applynoise=None, applyswaps=None, epochs=1000, trained_agents=500, n_training_steps=10, n_testing_steps=10, record_range=None, run_untill=None, timeout=30):
+def runGenralization(bars, barName, barArgs, ball, layout, display, file_to_be_loaded=None, applyperturb=None, epochs=1000, trained_agents=500, n_training_steps=10, n_testing_steps=10, record_range=None, run_untill=None, timeout=30):
     import __main__
     __main__.__dict__['_display'] = display
 
@@ -552,11 +533,11 @@ def runGenralization(bars, barName, barArgs, ball, layout, display, file_to_be_l
 
     for i in range(trained_agents):
         transitionMatrixTreeList = []
-        if applynoise:
+        if applyperturb:
             print("adding noise...")
             for n in range(len(NOISY_ARGS)):
                 transitionMatrixTreeList.append(defineTransitionMatrix(
-                    bars, ball, layout, file_to_be_loaded=file_to_be_loaded, applynoise=NOISY_ARGS[n]))
+                    bars, ball, layout, file_to_be_loaded=file_to_be_loaded, applyperturb=NOISY_ARGS[n]))
         if applyswaps: 
             print("adding permutations...")   
             for n in range(len(SWAP_LIST)):
@@ -582,7 +563,7 @@ def runGenralization(bars, barName, barArgs, ball, layout, display, file_to_be_l
         print('trained agent ', i)
         print('Scores:       ', ', '.join([str(score) for score in stats[i]]))
 
-        if applynoise:
+        if applyperturb:
             for k in range(len(NOISY_ARGS)):
                 if not os.path.exists(args['outputStats'].split('/')[0]):
                     os.makedirs(args['outputStats'].split('/')[0])
@@ -609,7 +590,7 @@ CURRICULUM_NOISE = [{"noise":{"mean":0, "std":0}, "epochs": 650}]
 CURRICULUM_SWAPS = [{"swaps":0, "epochs": 200}]
 
 
-def newTrainingMethod(bar, barName, barArgs, ball, layout, display, file_to_be_loaded=None, applynoise=None, applyswaps=None, epochs=1000, trained_agents=500, n_training_steps=10, n_testing_steps=10, record_range=None, run_untill=None, timeout=30):
+def newTrainingMethod(bar, barName, barArgs, ball, layout, display, file_to_be_loaded=None, applyperturb=None, epochs=1000, trained_agents=500, n_training_steps=10, n_testing_steps=10, record_range=None, run_untill=None, timeout=30):
     import __main__
     __main__.__dict__['_display'] = display
 
@@ -622,15 +603,15 @@ def newTrainingMethod(bar, barName, barArgs, ball, layout, display, file_to_be_l
         transitionMatrixTreeList = []
         current_list = []
 
-        if applynoise:
+        if applyperturb:
             print("adding noise...")
             current_list = CURRICULUM_NOISE.copy()
             for n in CURRICULUM_NOISE:
                 transitionMatrixTreeList.append(defineTransitionMatrix(
-                    bar, ball, layout, file_to_be_loaded=file_to_be_loaded, applynoise=n["noise"]))
+                    bar, ball, layout, file_to_be_loaded=file_to_be_loaded, applyperturb=n["noise"]))
             transitionMatrixTreeList.append(defineTransitionMatrix(
-                    bar, ball, layout, file_to_be_loaded=file_to_be_loaded, applynoise=applynoise))
-            current_list.append({"noise":applynoise, "epochs":epochs})
+                    bar, ball, layout, file_to_be_loaded=file_to_be_loaded, applyperturb=applyperturb))
+            current_list.append({"noise":applyperturb, "epochs":epochs})
         if applyswaps: 
             print("adding permutations...")   
             current_list = CURRICULUM_SWAPS.copy()
@@ -638,7 +619,7 @@ def newTrainingMethod(bar, barName, barArgs, ball, layout, display, file_to_be_l
                 transitionMatrixTreeList.append(defineTransitionMatrix(
                     bar, ball, layout, file_to_be_loaded=file_to_be_loaded, applyswaps=n["swaps"]))
             transitionMatrixTreeList.append(defineTransitionMatrix(
-                    bar, ball, layout, file_to_be_loaded=file_to_be_loaded, applyswaps=applyswaps))
+                    bar, ball, layout, file_to_be_loaded=file_to_be_loaded))
             current_list.append({"swaps":applyswaps, "epochs":epochs})
         
         current_transition_fn = transitionMatrixTreeList[0]
@@ -696,23 +677,23 @@ if __name__ == '__main__':
     args = readCommand(sys.argv[1:])  # Get game components based on input
     if args['mode'] == 'l':
         output = runLearnability(args['bars'], args['barAgentName'], args['agentOpts'],
-                                 args['ball'], args['layout'], args['display'], file_to_be_loaded=args['pretrainedAgentName'], applynoise=args['noiseOpts'], applyswaps=args["swapsArg"], **args['statOpts'])
+                                 args['ball'], args['layout'], args['display'], file_to_be_loaded=args['pretrainedAgentName'], applyperturb=args['perturbOpts'], **args['statOpts'])
         np.savetxt(args['outputStats']+".pkl", output,  delimiter=',')
     elif args['mode'] == 's':
         output = runStatistics(args['bars'], args['barAgentName'], args['agentOpts'],
-                               args['ball'], args['layout'], args['display'], file_to_be_loaded=args['pretrainedAgentName'], applynoise=args['noiseOpts'],  applyswaps=args["swapsArg"], **args['statOpts'])
+                               args['ball'], args['layout'], args['display'], file_to_be_loaded=args['pretrainedAgentName'], applyperturb=args['perturbOpts'], **args['statOpts'])
         np.savetxt(args['outputStats']+".pkl", output,  delimiter=',')
     elif args['mode'] == 'm':
         output = newTrainingMethod(args['bars'], args['barAgentName'], args['agentOpts'],
-                               args['ball'], args['layout'], args['display'], file_to_be_loaded=args['pretrainedAgentName'], applynoise=args['noiseOpts'],  applyswaps=args["swapsArg"], **args['statOpts'])
+                               args['ball'], args['layout'], args['display'], file_to_be_loaded=args['pretrainedAgentName'], applyperturb=args['perturbOpts'], **args['statOpts'])
         np.savetxt(args['outputStats']+".pkl", output,  delimiter=',')
     elif args['mode'] == 'e':
         output = runEnsembleAgents(args['bars'], args['barAgentName'], args['agentOpts'],
-                               args['ball'], args['layout'], args['display'], file_to_be_loaded=args['pretrainedAgentName'], applynoise=args['noiseOpts'],  applyswaps=args["swapsArg"], **args['statOpts'])
+                               args['ball'], args['layout'], args['display'], file_to_be_loaded=args['pretrainedAgentName'], applyperturb=args['perturbOpts'], **args['statOpts'])
         np.savetxt(args['outputStats']+".pkl", output,  delimiter=',')
     elif args['mode'] == 'g':
         output = runGenralization(args['bars'], args['barAgentName'], args['agentOpts'],
-                                  args['ball'], args['layout'], args['display'], file_to_be_loaded=args['pretrainedAgentName'], applynoise=args['noiseOpts'],  applyswaps=args["swapsArg"], **args['statOpts'])
+                                  args['ball'], args['layout'], args['display'], file_to_be_loaded=args['pretrainedAgentName'], applyperturb=args['perturbOpts'], **args['statOpts'])
         for n in range(len(NOISY_ARGS)):
             np.savetxt(args['outputStats'] +
                        f"_{NOISY_ARGS[n]}"+".pkl", output[n],  delimiter=',')

@@ -18,24 +18,33 @@ training_agents=500
 n_training_steps=10
 n_testing_steps=10
 
-mean=0
-std=0
-
 epochs=1000
 agent="BoltzmannAgent"
-noise_args='{"mean":'$mean',"std":'$std'}'
-min_range=0
-max_range=0
-record_range='{"min_range":'$min_range',"max_range":'$max_range'}'
 
-computer_bar_name="MoveMostlyWestComputerBar" 
-computer_bar_args='{"index":1,"prob":0.8}'
-computer_bararg='{"name":"'$computer_bar_name'","args":'$computer_bar_args'}'
-agentprop='{"bar":{},"computer_bar":'$computer_bararg'}'
+testingenv_mean=0
+testingenv_std=0.9
+testingenv_computer_bar_name="MoveMostlyWestComputerBar" 
+testingenv_computer_bar_args='{"index":1,"prob":0.8}'
+testingenv_computer_bararg='{"name":"'$testingenv_computer_bar_name'","args":'$testingenv_computer_bar_args'}'
+testingenv_noise_args='{"mean":'$testingenv_mean',"std":'$testingenv_std'}'
+testingenv_perturb='{"noise":'$testingenv_noise_args',"perm":{}}'
+echo $testingenv_computer_bararg
+
+ensembleenv_mean=0
+ensembleenv_std=0.9
+ensembleenv_computer_bar_name="ComputerBar" 
+ensembleenv_computer_bar_args='{"index":1,"prob":{}}'
+ensembleenv_computer_bararg='{"name":"'$ensembleenv_computer_bar_name'","args":'$ensembleenv_computer_bar_args'}'
+ensembleenv_noise_args='{"mean":'$ensembleenv_mean',"std":'$ensembleenv_std'}'
+ensembleenv_perturb='{"noise":'$ensembleenv_noise_args',"perm":{}}'
+echo $ensembleenv_computer_bararg
+
+agentprop='{"ensemble":{"bar":{},"computer_bar":'$ensembleenv_computer_bararg',"perturb":'$ensembleenv_perturb'},"test":{"bar":{},"computer_bar":'$testingenv_computer_bararg',"perturb":'$testingenv_perturb'}}'
+
 
 run_untill=1000
 
-folder="ensemble_${computer_bar}_${computer_bararg}_${layout}_${noise_args}_${agent}"
+folder="ensemble_${layout}_${agent}_${testingenv_computer_bar_name}_${testingenv_computer_bar_args}_${testingenv_noise_args}_${ensembleenv_computer_bar_name}_${ensembleenv_computer_bar_args}_${ensembleenv_noise_args}"
 outputname=''''$folder'/saved_agent_'$layout'_'$agent'_'$semanticDistribution'_'$noiseType'-'$training_agents'-'$noise_args'-test-'$RANDOM'-'$DATE''''
 
-python pong-statistics.py -q -m e -b $agent -a $agentprop -n $noise_args -l $layout -s '''{"epochs":'$epochs',"trained_agents":'$training_agents',"n_training_steps":'$n_training_steps',"n_testing_steps":'$n_testing_steps',"record_range":'$record_range',"run_untill":'$run_untill',"timeout":30}''' -o  $outputname
+python pong-statistics.py -q -m e -b $agent -a $agentprop -l $layout -s '''{"epochs":'$epochs',"trained_agents":'$training_agents',"n_training_steps":'$n_training_steps',"n_testing_steps":'$n_testing_steps',"record_range":'$record_range',"run_untill":'$run_untill',"timeout":30}''' -o  $outputname

@@ -80,7 +80,8 @@ class BallAgent(Agent):
         util.raiseNotDefined()
 
 class ComputerBarAgent(Agent):
-    def __init__(self, index):
+    def __init__( self, index, prob=None):
+        self.prob = prob
         self.index = index
 
     def getAction(self, state, actlist, ensemble_agent=False):
@@ -99,7 +100,10 @@ class ComputerBarAgent(Agent):
 
 class ComputerBar(ComputerBarAgent):
     "A ghost that chooses a legal action uniformly at random."
-
+    def __init__( self, index, prob=None):
+        self.prob = prob
+        self.index = index
+    
     def getDistribution(self, state):
         dist = util.Counter()
         for a in BarRules.getLegalActions(state, self.index):
