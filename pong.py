@@ -135,9 +135,9 @@ class MoveMostlyWestComputerBar(ComputerBarAgent):
 
 class DirectionalComputerBar( ComputerBarAgent ):
     "A ghost that prefers to rush Pacman, or flee when scared."
-    def __init__( self, index, prob_attack=0.2):
+    def __init__( self, index, prob=0.2):
         self.index = index
-        self.prob_attack = prob_attack
+        self.prob = prob
 
     def getDistribution( self, state ):
         # Read variables from state
@@ -155,7 +155,7 @@ class DirectionalComputerBar( ComputerBarAgent ):
         distancesToBall = [manhattanDistance( pos, ballPosition ) for pos in newPositions]
        
         bestScore = min( distancesToBall )
-        bestProb = self.prob_attack
+        bestProb = self.prob
         bestActions = [action for action, distance in zip( legalActions, distancesToBall ) if distance == bestScore]
 
         # Construct distribution

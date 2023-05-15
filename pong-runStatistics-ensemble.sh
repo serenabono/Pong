@@ -22,22 +22,22 @@ epochs=1000
 agent="BoltzmannAgent"
 
 testingenv_mean=0
-testingenv_std=0.9
-testingenv_computer_bar_name="MoveMostlyWestComputerBar" 
+testingenv_std=0
+testingenv_computer_bar_name="DirectionalComputerBar" 
 testingenv_computer_bar_args='{"index":1,"prob":0.8}'
 testingenv_computer_bararg='{"name":"'$testingenv_computer_bar_name'","args":'$testingenv_computer_bar_args'}'
 testingenv_noise_args='{"mean":'$testingenv_mean',"std":'$testingenv_std'}'
 testingenv_perturb='{"noise":'$testingenv_noise_args',"perm":{}}'
-echo $testingenv_computer_bararg
+echo "testing env: " $testingenv_computer_bararg
 
 ensembleenv_mean=0
-ensembleenv_std=0.9
+ensembleenv_std=0
 ensembleenv_computer_bar_name="ComputerBar" 
 ensembleenv_computer_bar_args='{"index":1,"prob":{}}'
 ensembleenv_computer_bararg='{"name":"'$ensembleenv_computer_bar_name'","args":'$ensembleenv_computer_bar_args'}'
 ensembleenv_noise_args='{"mean":'$ensembleenv_mean',"std":'$ensembleenv_std'}'
 ensembleenv_perturb='{"noise":'$ensembleenv_noise_args',"perm":{}}'
-echo $ensembleenv_computer_bararg
+echo "ensemble env: " $ensembleenv_computer_bararg
 
 agentprop='{"ensemble":{"bar":{},"computer_bar":'$ensembleenv_computer_bararg',"perturb":'$ensembleenv_perturb'},"test":{"bar":{},"computer_bar":'$testingenv_computer_bararg',"perturb":'$testingenv_perturb'}}'
 

@@ -22,9 +22,9 @@ epochs=1000
 agent="BoltzmannAgent"
 
 testingenv_mean=0
-testingenv_std=0.9
-testingenv_computer_bar_name="MoveMostlyWestComputerBar" 
-testingenv_computer_bar_args='{"index":1,"prob":0.8}'
+testingenv_std=0
+testingenv_computer_bar_name="DirectionalComputerBar" 
+testingenv_computer_bar_args='{"index":1,"prob":0.5}'
 testingenv_computer_bararg='{"name":"'$testingenv_computer_bar_name'","args":'$testingenv_computer_bar_args'}'
 testingenv_noise_args='{"mean":'$testingenv_mean',"std":'$testingenv_std'}'
 testingenv_perturb='{"noise":'$testingenv_noise_args',"perm":{}}'
@@ -36,7 +36,7 @@ agentprop='{"test":{"bar":{},"computer_bar":'$testingenv_computer_bararg',"pertu
 
 run_untill=1000
 
-folder="generalization_${layout}_${agent}_${testingenv_computer_bar_name}_${testingenv_computer_bar_args}_${testingenv_noise_args}"
+folder="learnability_${layout}_${agent}_${testingenv_computer_bar_name}_${testingenv_computer_bar_args}_${testingenv_noise_args}}"
 outputname=''''$folder'/saved_agent_'$layout'_'$agent'_'$semanticDistribution'_'$noiseType'-'$training_agents'-'$noise_args'-test-'$RANDOM'-'$DATE''''
 
-python pong-statistics.py -q -m g -b $agent -a $agentprop -l $layout -s '''{"epochs":'$epochs',"trained_agents":'$training_agents',"n_training_steps":'$n_training_steps',"n_testing_steps":'$n_testing_steps',"record_range":'$record_range',"run_untill":'$run_untill',"timeout":30}''' -o  $outputname
+python pong-statistics.py -q -m l -b $agent -a $agentprop -l $layout -s '''{"epochs":'$epochs',"trained_agents":'$training_agents',"n_training_steps":'$n_training_steps',"n_testing_steps":'$n_testing_steps',"record_range":'$record_range',"run_untill":'$run_untill',"timeout":30}''' -o  $outputname
