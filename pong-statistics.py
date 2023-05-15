@@ -208,14 +208,8 @@ def readCommand(argv):
 
     return args
 
-
-# NOISY_ARGS = [{},{"std":0.1, "mean":0}, {"std":0.2, "mean":0},{"std":0.3, "mean":0},{"std":0.4, "mean":0},{"std":0.5, "mean":0},{"std":0.6, "mean":0},{"std":0.7, "mean":0},{"std":0.8, "mean":0},{"std":0.9, "mean":0},
-#    {"std":0.1, "mean":0.1}, {"std":0.1, "mean":0.2},{"std":0.1, "mean":0.3},{"std":0.1, "mean":0.4},{"std":0.1, "mean":0.5},{"std":0.1, "mean":0.6},{"std":0.1, "mean":0.7},{"std":0.1, "mean":0.8},{"std":0.1, "mean":0.9}]
-
-NOISY_ARGS = [{}, {"std": 0.1, "mean": 0}, {"std": 0.2, "mean": 0}, {
-    "std": 0.3, "mean": 0}, {"std": 0.5, "mean": 0}, {"std": 0.7, "mean": 0}, {"std": 0.9, "mean": 0}]
-
-SWAP_LIST = [0,0.1,0.2,0.3,0.5,0.7,0.9]
+NOISY_ARGS = [{"noise":{},"perm":{}}, {"noise":{"std": 0.1, "mean": 0}, "perm":{}}, {"noise":{"std": 0.2, "mean": 0}, "perm":{}}, 
+{"noise":{"std": 0.3, "mean": 0}, "perm":{}}, {"noise":{"std": 0.5, "mean": 0}, "perm":{}}, {"noise":{"std": 0.7, "mean": 0}, "perm":{}}, {"noise":{"std": 0.9, "mean": 0}, "perm":{}}]
 
 def saveRecordings(tree, game, layout, filepath):
     import time
@@ -530,16 +524,11 @@ def runGenralization(bars, barName, barArgs, ball, layout, display, file_to_be_l
         if applyperturb:
             print("adding noise...")
             for n in range(len(NOISY_ARGS)):
+                print(NOISY_ARGS[n])
                 transitionMatrixTreeList.append(defineTransitionMatrix(
                     bars, ball, layout, file_to_be_loaded=file_to_be_loaded, applyperturb=NOISY_ARGS[n]))
 
         for j in range(epochs // n_training_steps):
-
-            if record_range and j >= record_range["min_range"] and j < record_range["max_range"]:
-                recordpath = args['outputStats'] + \
-                    "-generalization-RECORDING-" + f"{j}_epoch"
-            else:
-                recordpath = None
 
             print(j)
             if bar.__class__.__name__ != "KeyboardAgent":
