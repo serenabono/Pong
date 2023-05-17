@@ -482,6 +482,7 @@ class PongGameStateData(GameStateData):
         self._agentMoved = None
         self._lose = False
         self._win = False
+        self._numMoves = 0
         self.scoreChange = 0
 
     def deepCopy(self):
@@ -722,6 +723,9 @@ class PongGameState(GameState):
 
     def getScore(self):
         return float(self.data.score)
+    
+    def getMoves(self):
+        return float(self.data._numMoves)
 
     def getWalls(self):
         """
@@ -1163,6 +1167,7 @@ class PongGame(Game):
         if self.gameOver or self.transitionFunctionTree.transitionMatrixDic[nextstatehash] == {}:
             try:
                 self.agents[0].getAction(self.state, [], game_number, total_games, isInitial)
+                state.data._numMoves = self.numMoves
             except:
                 pass
         # inform a learning agent of the game result

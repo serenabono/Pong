@@ -74,14 +74,12 @@ def parseAgentArgs(str):
         opts[key] = val
     return opts
 
-def defineBars(agentOpts, flag, barName):
+def defineBars(agentOpts, barName):
 
     agentType = loadAgent(barName, 1)
-    if flag not in agentOpts:
-        return None, None
-    bar = agentType(agentOpts[flag]["bar"])  # Instantiate bar with agentArgs
-    computerBarType = getattr(__import__("pong"), agentOpts[flag]["computer_bar"]["name"])
-    computer_bar = computerBarType(prob=agentOpts[flag]["computer_bar"]["args"]["prob"], index=agentOpts[flag]["computer_bar"]["args"]["index"]) 
+    bar = agentType(agentOpts["bar"])  # Instantiate bar with agentArgs
+    computerBarType = getattr(__import__("pong"), agentOpts["computer_bar"]["name"])
+    computer_bar = computerBarType(prob=agentOpts["computer_bar"]["args"]["prob"], index=agentOpts["computer_bar"]["args"]["index"]) 
 
     return bar, computer_bar
 
@@ -171,14 +169,14 @@ def readCommand(argv):
     args["bars"] = {}
     args["perturbOpts"] = {}
 
-    testingenv_bar, testingenv_computer_bar = defineBars(agentOpts, "test", options.bar)
+    testingenv_bar, testingenv_computer_bar = defineBars(agentOpts["test"], options.bar)
     args["bars"]["test"] = {}
     args["bars"]["test"]["bar"] = testingenv_bar
     args["bars"]["test"]["computerbar"] = testingenv_computer_bar
     args["perturbOpts"]["test"] = agentOpts["test"]["perturb"]
 
     if "ensemble" in agentOpts:
-        ensembleenv_bar, ensembleenv_computer_bar = defineBars(agentOpts, "ensemble", options.bar)
+        ensembleenv_bar, ensembleenv_computer_bar = defineBars(agentOpts["ensemble"], options.bar)
         args["bars"]["ensemble"] = {}
         args["bars"]["ensemble"]["bar"] = ensembleenv_bar
         args["bars"]["ensemble"]["computerbar"] = ensembleenv_computer_bar
@@ -210,8 +208,8 @@ def readCommand(argv):
 
     return args
 
-NOISY_ARGS = [{"noise":{},"perm":{}}, {"noise":{"std": 0.1, "mean": 0}, "perm":{}}, {"noise":{"std": 0.2, "mean": 0}, "perm":{}}, 
-{"noise":{"std": 0.3, "mean": 0}, "perm":{}}, {"noise":{"std": 0.5, "mean": 0}, "perm":{}}, {"noise":{"std": 0.7, "mean": 0}, "perm":{}}, {"noise":{"std": 0.9, "mean": 0}, "perm":{}}]
+GENERALIZATION_WORLDS = [{"bar":{},"computer_bar":{"name":"DirectionalComputerBar","args":{"index":1,"prob":0.8}},"perturb":{"noise":{"mean":0,"std":0},"perm":{}}}, {"bar":{},"computer_bar":{"name":"DirectionalComputerBar","args":{"index":1,"prob":0.5}},"perturb":{"noise":{"mean":0,"std":0},"perm":{}}}]
+#GENERALIZATION_WORLDS = [{"bar":{},"computer_bar":{"name":"ComputerBar","args":{"index":1,"prob":{}}},"perturb":{"noise":{"mean":0,"std":0},"perm":{}}}, {"bar":{},"computer_bar":{"name":"ComputerBar","args":{"index":1,"prob":{}}},"perturb":{"noise":{"mean":0,"std":0.1},"perm":{}}}]
 
 def saveRecordings(tree, game, layout, filepath):
     import time
@@ -303,7 +301,7 @@ def test_noisy_agents_epoch(transitionMatrixTreeList, n_testing_steps, rules, ba
     across_agents_scores = []
     bar = bars[0]
 
-    for n in range(len(NOISY_ARGS)):
+    for n in range(len(GENERALIZATION_WORLDS)):
         scores = []
         for i in range(n_testing_steps):
             game = rules.newGame(layout, bars, ball,
@@ -477,22 +475,22 @@ def runEnsembleAgents(bars, barName, barArgs, ball, layout, display, file_to_be_
         transitionMatrixTreeList = {}
         # normal environment agent
         transitionMatrixTree = defineTransitionMatrix(
-                [bar, computer_bar], ball, layout, file_to_be_loaded=file_to_be_loaded, applyperturb=applyperturb["ensemble"])
-        transitionMatrixTreeList["ensemble"] = transitionMatrixTree
+                [bar, computer_bar], ball, layout, file_to_be_loaded=file_to_be_loaded, applyperturb=applyperturb["test"])
+        transitionMatrixTreeList["test"] = transitionMatrixTree
         
         transitionMatrixTree = defineTransitionMatrix(
-                [perturbedenv_bar, perturbedenv_computer_bar], ball, layout, file_to_be_loaded=file_to_be_loaded, applyperturb=applyperturb["test"])
-        transitionMatrixTreeList["test"] = transitionMatrixTree
+                [perturbedenv_bar, perturbedenv_computer_bar], ball, layout, file_to_be_loaded=file_to_be_loaded, applyperturb=applyperturb["ensemble"])
+        transitionMatrixTreeList["ensemble"] = transitionMatrixTree
         
         for j in range(epochs // n_training_steps):
             print(j)
             if bar.__class__.__name__ != "KeyboardAgent":
-                train_epoch(transitionMatrixTreeList["ensemble"], n_training_steps,
-                            rules, [bar, computer_bar], ball, layout, display)
                 train_epoch(transitionMatrixTreeList["test"], n_training_steps,
+                            rules, [bar, computer_bar], ball, layout, display)
+                train_epoch(transitionMatrixTreeList["ensemble"], n_training_steps,
                             rules, [perturbedenv_bar, perturbedenv_computer_bar], ball, layout, display)
             score = np.mean(test_epoch(
-                transitionMatrixTreeList["test"], n_testing_steps, rules, [perturbedenv_bar, perturbedenv_computer_bar], ball, layout, display, ensemble_agent=bar))
+                transitionMatrixTreeList["test"], n_testing_steps, rules, [bar, computer_bar], ball, layout, display, ensemble_agent=perturbedenv_bar))
             stats[i][j] = score
         print('trained agent ', i)
         print('Scores:       ', ', '.join([str(score) for score in stats[i]]))
@@ -518,53 +516,42 @@ def runGenralization(bars, barName, barArgs, ball, layout, display, file_to_be_l
     rules = PongClassicGameRules(timeout)
 
     stats = np.zeros(
-        [trained_agents, len(NOISY_ARGS), epochs // n_training_steps], dtype=np.float32)
-    
-    bar= bars["test"]["bar"] 
+        [trained_agents, len(GENERALIZATION_WORLDS), epochs // n_training_steps], dtype=np.float32)
 
     for i in range(trained_agents):
         transitionMatrixTreeList = []
         if applyperturb:
             print("adding noise...")
-            for n in range(len(NOISY_ARGS)):
-                print(NOISY_ARGS[n])
+            for n in range(len(GENERALIZATION_WORLDS)):
+                print(GENERALIZATION_WORLDS[n])
+                barType = loadAgent(barName, 1)
+                newworld_bar, newworld_computerbar = defineBars(GENERALIZATION_WORLDS[n], barName)
                 transitionMatrixTreeList.append(defineTransitionMatrix(
-                    bars, ball, layout, file_to_be_loaded=file_to_be_loaded, applyperturb=NOISY_ARGS[n]))
+                    [newworld_bar, newworld_computerbar], ball, layout, file_to_be_loaded=file_to_be_loaded, applyperturb=GENERALIZATION_WORLDS[n]["perturb"]))
 
         for j in range(epochs // n_training_steps):
 
             print(j)
-            if bar.__class__.__name__ != "KeyboardAgent":
-                train_epoch(transitionMatrixTreeList[0], n_training_steps,
-                            rules, bars, ball, layout, display)
+            train_epoch(transitionMatrixTreeList[0], n_training_steps,
+                            rules,  [bars["test"]["bar"], bars["test"]["computerbar"]], ball, layout, display)
             scores = test_noisy_agents_epoch(
-                transitionMatrixTreeList, n_testing_steps, rules, bars, ball, layout, display, record=recordpath)
+                transitionMatrixTreeList, n_testing_steps, rules, [bars["test"]["bar"], bars["test"]["computerbar"]], ball, layout, display)
             for k in range(len(scores)):
                 stats[i][k][j] = np.mean(scores[k])
 
         print('trained agent ', i)
         print('Scores:       ', ', '.join([str(score) for score in stats[i]]))
 
-        if applyperturb:
-            for k in range(len(NOISY_ARGS)):
-                if not os.path.exists(args['outputStats'].split('/')[0]):
-                    os.makedirs(args['outputStats'].split('/')[0])
-                np.savetxt(args['outputStats'] + f"_{NOISY_ARGS[k]}_" +
-                        f"{i}_training_agent.pkl", stats[i][k],  delimiter=',')
-        if applyswaps:
-            for k in range(len(SWAP_LIST)):
-                if not os.path.exists(args['outputStats'].split('/')[0]):
-                    os.makedirs(args['outputStats'].split('/')[0])
-                np.savetxt(args['outputStats'] + "_{\"swaps\":"+f"{SWAP_LIST[k]}"+"}_" +
-                        f"{i}_training_agent.pkl", stats[i][k],  delimiter=',')
+        for k in range(len(GENERALIZATION_WORLDS)):
+            if not os.path.exists(args['outputStats'].split('/')[0]):
+                os.makedirs(args['outputStats'].split('/')[0])
+            np.savetxt(args['outputStats'] + f'_{GENERALIZATION_WORLDS[k]["computer_bar"]["name"]}_' 
+            + f'{GENERALIZATION_WORLDS[k]["computer_bar"]["args"]}_' + f'{GENERALIZATION_WORLDS[k]["perturb"]["noise"]}_end_' 
+            + f"{i}_training_agent.pkl", stats[i][k],  delimiter=',')
 
-        #   reinitialize bar
-        if bar.__class__.__name__ == "KeyboardAgent":
-            barType = loadAgent(barName, 0)
-        else:
-            barType = loadAgent(barName, 1)
-        bar = barType(barArgs)
-        bars[0] = bar
+        barType = loadAgent(barName, 1)
+        bars["test"]["bar"] = barType(barArgs)
+        
 
     return np.mean(stats, 0)
 
@@ -676,8 +663,8 @@ if __name__ == '__main__':
     elif args['mode'] == 'g':
         output = runGenralization(args['bars'], args['barAgentName'], args['agentOpts'],
                                   args['ball'], args['layout'], args['display'], file_to_be_loaded=args['pretrainedAgentName'], applyperturb=args['perturbOpts'], **args['statOpts'])
-        for n in range(len(NOISY_ARGS)):
+        for n in range(len(GENERALIZATION_WORLDS)):
             np.savetxt(args['outputStats'] +
-                       f"_{NOISY_ARGS[n]}"+".pkl", output[n],  delimiter=',')
+                       f"_{GENERALIZATION_WORLDS[n]}"+".pkl", output[n],  delimiter=',')
 
     pass

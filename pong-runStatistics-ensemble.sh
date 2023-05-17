@@ -32,8 +32,8 @@ echo "testing env: " $testingenv_computer_bararg
 
 ensembleenv_mean=0
 ensembleenv_std=0
-ensembleenv_computer_bar_name="MoveMostlyWestComputerBar" 
-ensembleenv_computer_bar_args='{"index":1,"prob":0.8}'
+ensembleenv_computer_bar_name="DirectionalComputerBar" 
+ensembleenv_computer_bar_args='{"index":1,"prob":0.5}'
 ensembleenv_computer_bararg='{"name":"'$ensembleenv_computer_bar_name'","args":'$ensembleenv_computer_bar_args'}'
 ensembleenv_noise_args='{"mean":'$ensembleenv_mean',"std":'$ensembleenv_std'}'
 ensembleenv_perturb='{"noise":'$ensembleenv_noise_args',"perm":{}}'

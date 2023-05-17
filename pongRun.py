@@ -225,11 +225,14 @@ def runGames(layout, bars, ball, numGames, numTraining=0, catchExceptions=False,
 
     if (numGames-numTraining) > 0:
         scores = [game.state.getScore() for game in games]
+        moves = [game.state.getMoves() for game in games]
         wins = [game.state.isWin() for game in games]
         winRate = wins.count(True) / float(len(wins))
+        movesAvg = sum(moves) / float(len(moves))
         print('Average Score:', sum(scores) / float(len(scores)))
         print('Scores:       ', ', '.join([str(score) for score in scores]))
         print('Win Rate:      %d/%d (%.2f)' % (wins.count(True), len(wins), winRate))
+        print('Moves Avg:      %.2f' % (movesAvg))
         print('Record:       ', ', '.join([['Loss', 'Win'][int(w)] for w in wins]))
 
     return games

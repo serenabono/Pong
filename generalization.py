@@ -6,7 +6,7 @@ import re
 
 
 
-for folder in glob.glob('./generalization_*'):
+for folder in glob.glob('./generalization_pong_BoltzmannAgent_ComputerBar_*'):
     try:
         os.chdir(f"{folder}")
         print(folder)
@@ -17,9 +17,8 @@ for folder in glob.glob('./generalization_*'):
     outfiles = {}
     for filename in glob.glob("./*"):
         values = []
-        
-        pattern0 = re.findall(r'{.*?}', filename)[0]
-        pattern = re.findall(r'{.*?}', filename)[1]
+        pattern = re.findall(r'-test.*?_end', filename)[0]
+        print(pattern)
     
         with open(filename, newline='') as csvfile:
             reader = csv.reader(csvfile, delimiter='\n', quotechar='|')
