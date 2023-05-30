@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #SBATCH -c 1
-#SBATCH --time=10:00:00
+#SBATCH --time=8:00:00
 #SBATCH --job-name=ensemble
 
 #SBATCH -p short
@@ -36,7 +36,7 @@ agentprop='{"test":{"bar":{},"computer_bar":'$testingenv_computer_bararg',"pertu
 
 run_untill=1000
 
-folder="generalization_${layout}_${agent}_${testingenv_computer_bar_name}_${testingenv_computer_bar_args}_${testingenv_noise_args}}"
+folder="learnability_${layout}_${agent}_${testingenv_computer_bar_name}_${testingenv_computer_bar_args}_${testingenv_noise_args}}"
 outputname=''''$folder'/saved_agent_'$layout'_'$agent'_'$testingenv_computer_bar_name'_'$testingenv_computer_bar_args'_'$testingenv_noise_args'_'$training_agents'-'$RANDOM'-'$DATE'-test'''
 
-python pong-statistics.py -q -m g -b $agent -a $agentprop -l $layout -s '''{"epochs":'$epochs',"trained_agents":'$training_agents',"n_training_steps":'$n_training_steps',"n_testing_steps":'$n_testing_steps',"record_range":'$record_range',"run_untill":'$run_untill',"timeout":30}''' -o  $outputname
+python pong-statistics.py -q -m l -b $agent -a $agentprop -l $layout -s '''{"epochs":'$epochs',"trained_agents":'$training_agents',"n_training_steps":'$n_training_steps',"n_testing_steps":'$n_testing_steps',"record_range":'$record_range',"run_untill":'$run_untill',"timeout":30}''' -o  $outputname

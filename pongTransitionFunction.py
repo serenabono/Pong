@@ -208,6 +208,8 @@ class TransitionMatrixDicTree():
             for throughaction in self.transitionMatrixDic[fromstatehash]:
                 np.testing.assert_almost_equal(
                     sum(self.transitionMatrixDic[fromstatehash][throughaction].values()), 1)
+        
+        print("numstates: ", len(self.transitionMatrixDic))
 
     def createMatrixrecursively(self, agentid, lastcompletestate, throughactions, currentelementhash, prob):
         if currentelementhash not in self.helperDic[agentid]:

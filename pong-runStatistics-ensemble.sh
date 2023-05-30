@@ -22,16 +22,16 @@ epochs=1000
 agent="BoltzmannAgent"
 
 testingenv_mean=0
-testingenv_std=0
-testingenv_computer_bar_name="ComputerBar" 
-testingenv_computer_bar_args='{"index":1,"prob":{}}'
+testingenv_std=0.1
+testingenv_computer_bar_name="DirectionalComputerBar" 
+testingenv_computer_bar_args='{"index":1,"prob":0.5}'
 testingenv_computer_bararg='{"name":"'$testingenv_computer_bar_name'","args":'$testingenv_computer_bar_args'}'
 testingenv_noise_args='{"mean":'$testingenv_mean',"std":'$testingenv_std'}'
 testingenv_perturb='{"noise":'$testingenv_noise_args',"perm":{}}'
 echo "testing env: " $testingenv_computer_bararg
 
 ensembleenv_mean=0
-ensembleenv_std=0
+ensembleenv_std=0.1
 ensembleenv_computer_bar_name="DirectionalComputerBar" 
 ensembleenv_computer_bar_args='{"index":1,"prob":0.5}'
 ensembleenv_computer_bararg='{"name":"'$ensembleenv_computer_bar_name'","args":'$ensembleenv_computer_bar_args'}'
