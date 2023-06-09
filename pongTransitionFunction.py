@@ -386,5 +386,4 @@ class TransitionMatrixDicTree():
         newstate = state.movetoAnyState(
             self.keyDict[actiontostate], pacaction, agentId, posingrid)
         
-        BallRules.checkstatus(state)
         return newstate

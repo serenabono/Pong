@@ -22,7 +22,7 @@ epochs=1000
 agent="BoltzmannAgent"
 
 testingenv_mean=0
-testingenv_std=0
+testingenv_std=0.1
 testingenv_computer_bar_name="ComputerBar" 
 testingenv_computer_bar_args='{"index":1,"prob":{}}'
 testingenv_computer_bararg='{"name":"'$testingenv_computer_bar_name'","args":'$testingenv_computer_bar_args'}'
