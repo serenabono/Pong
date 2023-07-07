@@ -1008,10 +1008,6 @@ class BallRules(AgentRules):
         # Update Configuration
         ballState.configuration = ballState.configuration.movetoAnyState(
             nxtstatepos, direction)
-        
-        # Eat
-        next = ballState.configuration.getPosition()
-        nearest = nearestPoint(next)
 
         BallRules.checkstatus(state)
 
@@ -1164,12 +1160,9 @@ class PongGame(Game):
             if _BOINC_ENABLED:
                 boinc.set_fraction_done(self.getProgress())
         
-        if self.gameOver or self.transitionFunctionTree.transitionMatrixDic[nextstatehash] == {}:
-            try:
-                self.agents[0].getAction(self.state, [], game_number, total_games, isInitial)
-                state.data._numMoves = self.numMoves
-            except:
-                pass
+        if self.state.isWin() or self.state.isLose():
+            self.agents[0].getAction(self.state, [], game_number, total_games, isInitial)
+
         # inform a learning agent of the game result
         for agentIndex, agent in enumerate(self.agents):
             if "final" in dir(agent):
