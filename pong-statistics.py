@@ -208,12 +208,12 @@ def readCommand(argv):
 
     return args
 
-GENERALIZATION_WORLDS = [{"bar":{},"computer_bar":{"name":"DirectionalComputerBar","args":{"index":1,"prob":0.5}},"perturb":{"noise":{"mean":0,"std":0.1},"perm":{}}}, 
-{"bar":{},"computer_bar":{"name":"DirectionalComputerBar","args":{"index":1,"prob":0.5}},"perturb":{"noise":{"mean":0,"std":0.2},"perm":{}}},
-{"bar":{},"computer_bar":{"name":"DirectionalComputerBar","args":{"index":1,"prob":0.5}},"perturb":{"noise":{"mean":0,"std":0.3},"perm":{}}},
-{"bar":{},"computer_bar":{"name":"DirectionalComputerBar","args":{"index":1,"prob":0.5}},"perturb":{"noise":{"mean":0,"std":0.5},"perm":{}}},
-{"bar":{},"computer_bar":{"name":"DirectionalComputerBar","args":{"index":1,"prob":0.5}},"perturb":{"noise":{"mean":0,"std":0.7},"perm":{}}},
-{"bar":{},"computer_bar":{"name":"DirectionalComputerBar","args":{"index":1,"prob":0.5}},"perturb":{"noise":{"mean":0,"std":0.9},"perm":{}}}]
+GENERALIZATION_WORLDS = [{"bar":{},"computer_bar":{"name":"DirectionalComputerBar","args":{"index":1,"prob":0.5}},"perturb":{"noise":{"mean":0,"std":0},"perm":{}}}, ]
+#{"bar":{},"computer_bar":{"name":"DirectionalComputerBar","args":{"index":1,"prob":0.5}},"perturb":{"noise":{"mean":0,"std":0.2},"perm":{}}},
+#{"bar":{},"computer_bar":{"name":"DirectionalComputerBar","args":{"index":1,"prob":0.5}},"perturb":{"noise":{"mean":0,"std":0.3},"perm":{}}},
+#{"bar":{},"computer_bar":{"name":"DirectionalComputerBar","args":{"index":1,"prob":0.5}},"perturb":{"noise":{"mean":0,"std":0.5},"perm":{}}},
+#{"bar":{},"computer_bar":{"name":"DirectionalComputerBar","args":{"index":1,"prob":0.5}},"perturb":{"noise":{"mean":0,"std":0.7},"perm":{}}},
+#{"bar":{},"computer_bar":{"name":"DirectionalComputerBar","args":{"index":1,"prob":0.5}},"perturb":{"noise":{"mean":0,"std":0.9},"perm":{}}}]
 
 
 def saveRecordings(tree, game, layout, filepath):
@@ -521,7 +521,7 @@ def runGenralization(bars, barName, barArgs, ball, layout, display, file_to_be_l
     rules = PongClassicGameRules(timeout)
 
     stats = np.zeros(
-        [trained_agents, len(GENERALIZATION_WORLDS) + 1, epochs // n_training_steps], dtype=np.float32)
+        [trained_agents, len(GENERALIZATION_WORLDS), epochs // n_training_steps], dtype=np.float32)
 
     for i in range(trained_agents):
         transitionMatrixTreeList = []
@@ -550,18 +550,13 @@ def runGenralization(bars, barName, barArgs, ball, layout, display, file_to_be_l
         print('trained agent ', i)
         print('Scores:       ', ', '.join([str(score) for score in stats[i]]))
 
-        print(bars)
-
-        np.savetxt(args['outputStats'] + f'_{bars["computer_bar"]["name"]}_' 
-            + f'{bars["computer_bar"]["args"]}_' + f'{applyperturb["test"]["noise"]}_end_' 
-            + f"{i}_training_agent.pkl", stats[i + 1][k],  delimiter=',')
 
         for k in range(len(GENERALIZATION_WORLDS)):
             if not os.path.exists(args['outputStats'].split('/')[0]):
                 os.makedirs(args['outputStats'].split('/')[0])
             np.savetxt(args['outputStats'] + f'_{GENERALIZATION_WORLDS[k]["computer_bar"]["name"]}_' 
             + f'{GENERALIZATION_WORLDS[k]["computer_bar"]["args"]}_' + f'{GENERALIZATION_WORLDS[k]["perturb"]["noise"]}_end_' 
-            + f"{i}_training_agent.pkl", stats[i + 1][k],  delimiter=',')
+            + f"{i}_training_agent.pkl", stats[i][k],  delimiter=',')
 
         barType = loadAgent(barName, 1)
         bars["test"]["bar"] = barType(barArgs)
