@@ -21,7 +21,7 @@ max_record=1000
 min_record=1000
 record_range='{"max":'$max_record',"min":'$min_record'}'
 run_untill=100
-epochs=100
+epochs=1000
 agent="BoltzmannAgent"
 
 epochs=100
