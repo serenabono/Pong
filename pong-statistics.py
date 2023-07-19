@@ -543,7 +543,7 @@ def runGenralization(bars, barName, barArgs, ball, layout, display, file_to_be_l
             train_epoch(transitionMatrixTreeList[0], n_training_steps,
                             rules,  [bars["test"]["bar"], bars["test"]["computerbar"]], ball, layout, display)
             scores = test_noisy_agents_epoch(
-                transitionMatrixTreeList, n_testing_steps, rules, [bars["test"]["bar"], bars["test"]["computerbar"]], ball, layout, display)
+                transitionMatrixTreeList[1:], n_testing_steps, rules, [bars["test"]["bar"], bars["test"]["computerbar"]], ball, layout, display)
             for k in range(len(scores)):
                 stats[i][k][j] = np.mean(scores[k])
 
