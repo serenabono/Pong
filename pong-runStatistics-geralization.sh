@@ -2,7 +2,7 @@
 
 #SBATCH -c 1
 #SBATCH --time=5:00:00
-#SBATCH --job-name=ensemble
+#SBATCH --job-name=generalization
 
 #SBATCH -p short
 #SBATCH --mem=10G
@@ -11,7 +11,7 @@
 #SBATCH --mail-user=serena.bono@childrens.harvard.edu
 
 DATE=$(date '+%d:%m:%Y-%H:%M:%S')
-layout="pong"
+layout="pong-thick"
 semanticDistribution="DistributedNoise"
 noiseType="GaussianNoise"
 training_agents=500
@@ -21,13 +21,13 @@ max_record=1000
 min_record=1000
 record_range='{"max":'$max_record',"min":'$min_record'}'
 run_untill=1000
-epochs=100
+epochs=1000
 agent="BoltzmannAgent"
 
 testingenv_mean=0
 testingenv_std=0
-testingenv_computer_bar_name="DirectionalComputerBar" 
-testingenv_computer_bar_args='{"index":1,"prob":0.9}'
+testingenv_computer_bar_name="ComputerBar" 
+testingenv_computer_bar_args='{"index":1,"prob":{}}'
 testingenv_computer_bararg='{"name":"'$testingenv_computer_bar_name'","args":'$testingenv_computer_bar_args'}'
 testingenv_noise_args='{"mean":'$testingenv_mean',"std":'$testingenv_std'}'
 testingenv_perturb='{"noise":'$testingenv_noise_args',"perm":{}}'

@@ -5,41 +5,38 @@
 #SBATCH --job-name=ensemble
 
 #SBATCH -p short
-#SBATCH --mem=30G
+#SBATCH --mem=10G
 #SBATCH -o slurm_outputs_scripts/hostname_%j.out
 #SBATCH -e slurm_outputs_scripts/hostname_%j.err
 #SBATCH --mail-user=serena.bono@childrens.harvard.edu
 
 DATE=$(date '+%d:%m:%Y-%H:%M:%S')
-layout="pong"
+layout="pong-thick"
 semanticDistribution="DistributedNoise"
 noiseType="GaussianNoise"
-training_agents=500
+training_agents=200
 n_training_steps=10
 n_testing_steps=10
 max_record=1000
 min_record=1000
 record_range='{"max":'$max_record',"min":'$min_record'}'
-run_untill=100
+run_untill=1000
 epochs=1000
 agent="BoltzmannAgent"
 
-epochs=100
-agent="BoltzmannAgent"
-
 testingenv_mean=0
-testingenv_std=0.1
+testingenv_std=0
 testingenv_computer_bar_name="DirectionalComputerBar" 
-testingenv_computer_bar_args='{"index":1,"prob":{}}'
+testingenv_computer_bar_args='{"index":1,"prob":0.3}'
 testingenv_computer_bararg='{"name":"'$testingenv_computer_bar_name'","args":'$testingenv_computer_bar_args'}'
 testingenv_noise_args='{"mean":'$testingenv_mean',"std":'$testingenv_std'}'
 testingenv_perturb='{"noise":'$testingenv_noise_args',"perm":{}}'
 echo "testing env: " $testingenv_computer_bararg
 
 ensembleenv_mean=0
-ensembleenv_std=0.1
+ensembleenv_std=0
 ensembleenv_computer_bar_name="DirectionalComputerBar" 
-ensembleenv_computer_bar_args='{"index":1,"prob":0.5}'
+ensembleenv_computer_bar_args='{"index":1,"prob":0.6}'
 ensembleenv_computer_bararg='{"name":"'$ensembleenv_computer_bar_name'","args":'$ensembleenv_computer_bar_args'}'
 ensembleenv_noise_args='{"mean":'$ensembleenv_mean',"std":'$ensembleenv_std'}'
 ensembleenv_perturb='{"noise":'$ensembleenv_noise_args',"perm":{}}'

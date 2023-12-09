@@ -1131,6 +1131,7 @@ class PongGame(Game):
             else:
                 observation = self.state.deepCopy()
             
+            #print(self.state)
             if agentIndex == 0:
                 fromstatehash = self.transitionFunctionTree.getHashfromState(observation)
                 legal_actions = self.transitionFunctionTree.transitionMatrixDic[fromstatehash].keys()

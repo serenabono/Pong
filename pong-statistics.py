@@ -208,12 +208,10 @@ def readCommand(argv):
 
     return args
 
-GENERALIZATION_WORLDS = [{"bar":{},"computer_bar":{"name":"DirectionalComputerBar","args":{"index":1,"prob":0.5}},"perturb":{"noise":{"mean":0,"std":0},"perm":{}}}, ]
-#{"bar":{},"computer_bar":{"name":"DirectionalComputerBar","args":{"index":1,"prob":0.5}},"perturb":{"noise":{"mean":0,"std":0.2},"perm":{}}},
-#{"bar":{},"computer_bar":{"name":"DirectionalComputerBar","args":{"index":1,"prob":0.5}},"perturb":{"noise":{"mean":0,"std":0.3},"perm":{}}},
-#{"bar":{},"computer_bar":{"name":"DirectionalComputerBar","args":{"index":1,"prob":0.5}},"perturb":{"noise":{"mean":0,"std":0.5},"perm":{}}},
-#{"bar":{},"computer_bar":{"name":"DirectionalComputerBar","args":{"index":1,"prob":0.5}},"perturb":{"noise":{"mean":0,"std":0.7},"perm":{}}},
-#{"bar":{},"computer_bar":{"name":"DirectionalComputerBar","args":{"index":1,"prob":0.5}},"perturb":{"noise":{"mean":0,"std":0.9},"perm":{}}}]
+GENERALIZATION_WORLDS = [{"bar":{},"computer_bar":{"name":"ComputerBar","args":{"index":1,"prob":{}}},"perturb":{"noise":{"mean":0,"std":0},"perm":{}}},
+{"bar":{},"computer_bar":{"name":"ComputerBar","args":{"index":1,"prob":[]}},"perturb":{"noise":{"mean":0,"std":0.1},"perm":{}}},
+{"bar":{},"computer_bar":{"name":"ComputerBar","args":{"index":1,"prob":[]}},"perturb":{"noise":{"mean":0,"std":0.3},"perm":{}}},
+{"bar":{},"computer_bar":{"name":"ComputerBar","args":{"index":1,"prob":[]}},"perturb":{"noise":{"mean":0,"std":0.5},"perm":{}}}]
 
 
 def saveRecordings(tree, game, layout, filepath):
@@ -435,6 +433,8 @@ def runLearnability(bars, barName, barArgs, ball, layout, display, file_to_be_lo
     stats = np.zeros(
         [trained_agents, epochs // n_training_steps], dtype=np.float32)
     
+    if not os.path.exists(args['outputStats'].split('/')[0]):
+        os.makedirs(args['outputStats'].split('/')[0])
     # only the agent operated bar
 
     for i in range(trained_agents):
@@ -448,6 +448,11 @@ def runLearnability(bars, barName, barArgs, ball, layout, display, file_to_be_lo
             score = np.mean(test_epoch(
                 transitionMatrixTree, n_testing_steps, rules, [bars["test"]["bar"],bars["test"]["computerbar"]] , ball, layout, display))
             stats[i][j] = score
+            
+            with open(args['outputStats'] +
+                   f"{i}_training_agent_{j}_epoch.json", 'w') as f:
+                json.dump(bars["test"]["bar"].agent.q_values, f)
+        
         print('trained agent ', i)
         print('Scores:       ', ', '.join([str(score) for score in stats[i]]))
 
@@ -455,7 +460,7 @@ def runLearnability(bars, barName, barArgs, ball, layout, display, file_to_be_lo
             os.makedirs(args['outputStats'].split('/')[0])
         np.savetxt(args['outputStats'] +
                    f"{i}_training_agent.pkl", stats[i],  delimiter=',')
-
+            
         barType = loadAgent(barName, 1)
         bars["test"]["bar"] = barType(barArgs)
 
