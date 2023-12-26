@@ -5,7 +5,7 @@
 #SBATCH --job-name=ensemble
 
 #SBATCH -p short
-#SBATCH --mem=10G
+#SBATCH --mem=15G
 #SBATCH -o slurm_outputs_scripts/hostname_%j.out
 #SBATCH -e slurm_outputs_scripts/hostname_%j.err
 #SBATCH --mail-user=serena.bono@childrens.harvard.edu
@@ -22,14 +22,14 @@ min_record=1000
 record_range='{"max":'$max_record',"min":'$min_record'}'
 run_untill=1000
 epochs=1000
-agent="SarsaAgent"
+agent="BoltzmannAgent"
 exploration="E_GREEDY"
 exploration_name="Egreedy"
 
 testingenv_mean=0
-testingenv_std=0.1
-testingenv_computer_bar_name="DirectionalComputerBar" 
-testingenv_computer_bar_args='{"index":1,"prob":0.6}'
+testingenv_std=0
+testingenv_computer_bar_name="ComputerBar" 
+testingenv_computer_bar_args='{"index":1,"prob":{}}'
 testingenv_computer_bararg='{"name":"'$testingenv_computer_bar_name'","args":'$testingenv_computer_bar_args'}'
 testingenv_noise_args='{"mean":'$testingenv_mean',"std":'$testingenv_std'}'
 testingenv_perturb='{"noise":'$testingenv_noise_args',"perm":{}}'
