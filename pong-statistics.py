@@ -208,10 +208,10 @@ def readCommand(argv):
 
     return args
 
-GENERALIZATION_WORLDS = [{"bar":{},"computer_bar":{"name":"ComputerBar","args":{"index":1,"prob":{}}},"perturb":{"noise":{"mean":0,"std":0},"perm":{}}},
-{"bar":{},"computer_bar":{"name":"ComputerBar","args":{"index":1,"prob":[]}},"perturb":{"noise":{"mean":0,"std":0.1},"perm":{}}},
-{"bar":{},"computer_bar":{"name":"ComputerBar","args":{"index":1,"prob":[]}},"perturb":{"noise":{"mean":0,"std":0.3},"perm":{}}},
-{"bar":{},"computer_bar":{"name":"ComputerBar","args":{"index":1,"prob":[]}},"perturb":{"noise":{"mean":0,"std":0.5},"perm":{}}}]
+GENERALIZATION_WORLDS = [{"bar":{},"computer_bar":{"name":"DirectionalComputerBar","args":{"index":1,"prob":0.6}},"perturb":{"noise":{"mean":0,"std":0},"perm":{}}},
+{"bar":{},"computer_bar":{"name":"DirectionalComputerBar","args":{"index":1,"prob":0.6}},"perturb":{"noise":{"mean":0,"std":0.1},"perm":{}}},
+{"bar":{},"computer_bar":{"name":"DirectionalComputerBar","args":{"index":1,"prob":0.6}},"perturb":{"noise":{"mean":0,"std":0.3},"perm":{}}},
+{"bar":{},"computer_bar":{"name":"DirectionalComputerBar","args":{"index":1,"prob":0.6}},"perturb":{"noise":{"mean":0,"std":0.5},"perm":{}}}]
 
 
 def saveRecordings(tree, game, layout, filepath):
@@ -449,9 +449,9 @@ def runLearnability(bars, barName, barArgs, ball, layout, display, file_to_be_lo
                 transitionMatrixTree, n_testing_steps, rules, [bars["test"]["bar"],bars["test"]["computerbar"]] , ball, layout, display))
             stats[i][j] = score
             
-            with open(args['outputStats'] +
-                   f"{i}_training_agent_{j}_epoch.json", 'w') as f:
-                json.dump(bars["test"]["bar"].agent.q_values, f)
+            #with open(args['outputStats'] +
+            #       f"{i}_training_agent_{j}_epoch.json", 'w') as f:
+            #    json.dump(bars["test"]["bar"].agent.q_values, f)
         
         print('trained agent ', i)
         print('Scores:       ', ', '.join([str(score) for score in stats[i]]))
@@ -519,7 +519,7 @@ def runEnsembleAgents(bars, barName, barArgs, ball, layout, display, file_to_be_
     return np.mean(stats, 0)
 
 
-def runGenralization(bars, barName, barArgs, ball, layout, display, file_to_be_loaded=None, applyperturb=None, epochs=1000, trained_agents=500, n_training_steps=10, n_testing_steps=10, record_range=None, run_untill=None, timeout=30):
+def runGeneralization(bars, barName, barArgs, ball, layout, display, file_to_be_loaded=None, applyperturb=None, epochs=1000, trained_agents=500, n_training_steps=10, n_testing_steps=10, record_range=None, run_untill=None, timeout=30):
     import __main__
     __main__.__dict__['_display'] = display
 
@@ -675,7 +675,7 @@ if __name__ == '__main__':
                                args['ball'], args['layout'], args['display'], file_to_be_loaded=args['pretrainedAgentName'], applyperturb=args['perturbOpts'], **args['statOpts'])
         np.savetxt(args['outputStats']+".pkl", output,  delimiter=',')
     elif args['mode'] == 'g':
-        output = runGenralization(args['bars'], args['barAgentName'], args['agentOpts'],
+        output = runGeneralization(args['bars'], args['barAgentName'], args['agentOpts'],
                                   args['ball'], args['layout'], args['display'], file_to_be_loaded=args['pretrainedAgentName'], applyperturb=args['perturbOpts'], **args['statOpts'])
         for n in range(len(GENERALIZATION_WORLDS)):
             np.savetxt(args['outputStats'] +
