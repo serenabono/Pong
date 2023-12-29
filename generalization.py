@@ -36,6 +36,6 @@ for folder in glob.glob('./generalization_*'):
         values = np.sum(data,0)/len(data)
         std = np.std(data,axis=0) / np.sqrt(len(data))
         modifyied_pattern = pattern.replace("'","\"").replace(" ", "").replace("-train","").replace("-test","").replace("_end", "")
-        np.savetxt(f"{folder[:-1]}{modifyied_pattern}.pkl" ,values,  delimiter=',')
-        np.savetxt(f"{folder[:-1]}{modifyied_pattern}_errorbar.pkl" ,std,  delimiter=',')
+        np.savetxt(f"{folder}{modifyied_pattern}.pkl" ,values,  delimiter=',')
+        np.savetxt(f"{folder}{modifyied_pattern}_errorbar.pkl" ,std,  delimiter=',')
     os.chdir("../")

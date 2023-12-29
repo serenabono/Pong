@@ -11,7 +11,7 @@
 #SBATCH --mail-user=serena.bono@childrens.harvard.edu
 
 DATE=$(date '+%d:%m:%Y-%H:%M:%S')
-layout="pong-thick"
+layout="pong"
 semanticDistribution="DistributedNoise"
 noiseType="GaussianNoise"
 training_agents=500
@@ -28,8 +28,8 @@ exploration_name="Egreedy"
 
 testingenv_mean=0
 testingenv_std=0
-testingenv_computer_bar_name="DirectionalComputerBar" 
-testingenv_computer_bar_args='{"index":1,"prob":0.6}'
+testingenv_computer_bar_name="ComputerBar" 
+testingenv_computer_bar_args='{"index":1,"prob":{}}'
 testingenv_computer_bararg='{"name":"'$testingenv_computer_bar_name'","args":'$testingenv_computer_bar_args'}'
 testingenv_noise_args='{"mean":'$testingenv_mean',"std":'$testingenv_std'}'
 testingenv_perturb='{"noise":'$testingenv_noise_args',"perm":{}}'
