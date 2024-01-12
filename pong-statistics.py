@@ -209,12 +209,12 @@ def readCommand(argv):
     return args
 
 # testing envs NON SEMANTIC
-GENERALIZATION_WORLDS = [{"bar":{},"computer_bar":{"name":"ComputerBar","args":
-                        {"index":1,"prob":{}}},"perturb":{"noise":{"mean":0,"std":0.1},"perm":{}}}, {"bar":{},"computer_bar":{"name":"ComputerBar","args":
-                        {"index":1,"prob":{}}},"perturb":{"noise":{"mean":0,"std":0.5},"perm":{}}}]
+# GENERALIZATION_WORLDS = [{"bar":{},"computer_bar":{"name":"ComputerBar","args":
+#                         {"index":1,"prob":{}}},"perturb":{"noise":{"mean":0,"std":0.1},"perm":{}}}, {"bar":{},"computer_bar":{"name":"ComputerBar","args":
+#                         {"index":1,"prob":{}}},"perturb":{"noise":{"mean":0,"std":0.5},"perm":{}}}]
 
 # testing envs SEMANTIC
-#GENERALIZATION_WORLDS = [{"bar":{},"computer_bar":{"name":"ComputerBar","args":{"index":1,"prob":{}}},"perturb":{"noise":{"mean":0,"std":0},"perm":{}}}]
+GENERALIZATION_WORLDS = [{"bar":{},"computer_bar":{"name":"DirectionalComputerBar","args":{"index":1,"prob":0.6}},"perturb":{"noise":{"mean":0,"std":0},"perm":{}}}]
 
 
 def saveRecordings(tree, game, layout, filepath):
@@ -322,10 +322,6 @@ def test_noisy_agents_epoch(transitionMatrixTreeList, n_testing_steps, rules, ba
 
             game.run(i, n_testing_steps)
             scores.append(game.state.getScore())
-
-            if record:
-                saveRecordings(transitionMatrixTree, game,
-                               layout, record + f"-{i}_round.pkl")
 
         across_agents_scores.append(np.asarray(scores))
 

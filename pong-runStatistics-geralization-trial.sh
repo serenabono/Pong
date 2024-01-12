@@ -21,4 +21,15 @@ outputname=$8
 record_range=$9
 run_untill=${10}
 
+echo agent=$1
+echo layout=$2
+echo agentprop=$3
+echo epochs=$4
+echo training_agents=$5
+echo n_training_steps=$6
+echo n_testing_steps=$7
+echo outputname=$8
+echo record_range=$9
+echo run_untill=${10}
+
 python pong-statistics.py -q -m g -b $agent -a $agentprop -l $layout -s '''{"epochs":'$epochs',"trained_agents":'$training_agents',"n_training_steps":'$n_training_steps',"n_testing_steps":'$n_testing_steps',"record_range":'$record_range',"run_untill":'$run_untill',"timeout":30}''' -o  $outputname
