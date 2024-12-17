@@ -29,4 +29,4 @@ agentprop='{"test":{"bar":{"exploration_strategy":"'$exploration'"},"computer_ba
 folder="_trial_generalization_${agent}_${exploration_name}_${layout}_${testingenv_computer_bar_name}_${testingenv_computer_bar_args}_${testingenv_noise_args}"
 
 outputname=''''$folder'/saved_agent_'$layout'_'$agent'_'$testingenv_computer_bar_name'_'$testingenv_computer_bar_args'_'$testingenv_noise_args'_'$testing_agents'-'$RANDOM'-'$DATE'-test'''
-bash pong-runStatistics-geralization-trial.sh $agent $layout $agentprop $epochs $training_agents $n_training_steps $n_testing_steps $outputname $record_range $run_untill
+bash pong-runStatistics-geralization.sh $agent $layout $agentprop $epochs $training_agents $n_training_steps $n_testing_steps $outputname $record_range $run_untill

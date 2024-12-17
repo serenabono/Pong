@@ -298,11 +298,11 @@ somegrid_l = ['pong-thick','pong']
 someagent_l = ['BoltzmannAgent','SarsaAgent']
 someexploration_strategy_l = ['Boltzmann','Egreedy']
 #training env
+someotherbar_l = ['DirectionalComputerBar_{"index":1,"prob":0.3}','DirectionalComputerBar_{"index":1,"prob":0.6}'] 
+someothernoise_l = ['{"mean":0,"std":0}','{"mean":0,"std":0}']
+#testing env
 somebar_l = ['ComputerBar_{"index":1,"prob":{}}','ComputerBar_{"index":1,"prob":{}}']
 somenoise_l = ['{"mean":0,"std":0}','{"mean":0,"std":0}']
-#testing env
-someotherbar_l = ['DirectionalComputerBar_{"index":1,"prob":0.6}','DirectionalComputerBar_{"index":1,"prob":0.3}'] 
-someothernoise_l = ['{"mean":0,"std":0}','{"mean":0,"std":0}']
 
 for someagent in someagent_l:
     if someagent not in name:

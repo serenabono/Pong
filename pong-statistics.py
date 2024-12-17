@@ -214,7 +214,7 @@ def readCommand(argv):
 #                         {"index":1,"prob":{}}},"perturb":{"noise":{"mean":0,"std":0.5},"perm":{}}}]
 
 # testing envs SEMANTIC
-GENERALIZATION_WORLDS = [{"bar":{},"computer_bar":{"name":"DirectionalComputerBar","args":{"index":1,"prob":0.6}},"perturb":{"noise":{"mean":0,"std":0},"perm":{}}}]
+GENERALIZATION_WORLDS = [{"bar":{},"computer_bar":{"name":"ComputerBar","args":{"index":1,"prob":{}}},"perturb":{"noise":{"mean":0,"std":0},"perm":{}}}]
 
 
 def saveRecordings(tree, game, layout, filepath):

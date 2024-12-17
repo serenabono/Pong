@@ -18,5 +18,7 @@ training_agents=$5
 n_training_steps=$6
 n_testing_steps=$7
 outputname=$8
+record_range=$9
+run_untill=${10}
 
 python pong-statistics.py -q -m g -b $agent -a $agentprop -l $layout -s '''{"epochs":'$epochs',"trained_agents":'$training_agents',"n_training_steps":'$n_training_steps',"n_testing_steps":'$n_testing_steps',"record_range":'$record_range',"run_untill":'$run_untill',"timeout":30}''' -o  $outputname
