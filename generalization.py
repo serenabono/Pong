@@ -14,9 +14,10 @@ for folder in glob.glob('./generalization_*'):
         continue
     values = []
     outfiles = {}
+    repeat_grid = folder.split("_")[3]
     for filename in glob.glob("./*"):
         values = []
-        pattern = re.findall(r'-test.*?_end', filename)[0]
+        pattern = pattern = f"_{repeat_grid}" + re.findall(r'-test.*?_end', filename)[0]
     
         with open(filename, newline='') as csvfile:
             reader = csv.reader(csvfile, delimiter='\n', quotechar='|')
@@ -35,7 +36,7 @@ for folder in glob.glob('./generalization_*'):
         data=np.asarray(outfiles[pattern])[0:500]
         values = np.sum(data,0)/len(data)
         std = np.std(data,axis=0) / np.sqrt(len(data))
-        modifyied_pattern = pattern.replace("'","\"").replace(" ", "").replace("-train","").replace("-test","").replace("_end", "")
-        np.savetxt(f"{folder}{modifyied_pattern}.pkl" ,values,  delimiter=',')
-        np.savetxt(f"{folder}{modifyied_pattern}_errorbar.pkl" ,std,  delimiter=',')
+        modified_pattern = pattern.replace("'","\"").replace(" ", "").replace("-train","").replace("-test","").replace("_end", "")
+        np.savetxt(f"{folder}{modified_pattern}.pkl" ,values,  delimiter=',')
+        np.savetxt(f"{folder}{modified_pattern}_errorbar.pkl" ,std,  delimiter=',')
     os.chdir("../")

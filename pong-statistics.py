@@ -209,13 +209,12 @@ def readCommand(argv):
     return args
 
 # testing envs NON SEMANTIC
-GENERALIZATION_WORLDS = [{"bar":{},"computer_bar":{"name":"ComputerBar","args":{"index":1,"prob":{}}},"perturb":{"noise":{"mean":0,"std":0},"perm":{}}},
-{"bar":{},"computer_bar":{"name":"ComputerBar","args":{"index":1,"prob":{}}},"perturb":{"noise":{"mean":0,"std":0.1},"perm":{}}},
-{"bar":{},"computer_bar":{"name":"ComputerBar","args":{"index":1,"prob":{}}},"perturb":{"noise":{"mean":0,"std":0.3},"perm":{}}},
-{"bar":{},"computer_bar":{"name":"ComputerBar","args":{"index":1,"prob":{}}},"perturb":{"noise":{"mean":0,"std":0.5},"perm":{}}}]
+# GENERALIZATION_WORLDS = [{"bar":{},"computer_bar":{"name":"ComputerBar","args":
+#                         {"index":1,"prob":{}}},"perturb":{"noise":{"mean":0,"std":0.1},"perm":{}}}, {"bar":{},"computer_bar":{"name":"ComputerBar","args":
+#                         {"index":1,"prob":{}}},"perturb":{"noise":{"mean":0,"std":0.5},"perm":{}}}]
 
 # testing envs SEMANTIC
-#GENERALIZATION_WORLDS = [{"bar":{},"computer_bar":{"name":"ComputerBar","args":{"index":1,"prob":{}}},"perturb":{"noise":{"mean":0,"std":0},"perm":{}}}]
+GENERALIZATION_WORLDS = [{"bar":{},"computer_bar":{"name":"ComputerBar","args":{"index":1,"prob":{}}},"perturb":{"noise":{"mean":0,"std":0},"perm":{}}}]
 
 
 def saveRecordings(tree, game, layout, filepath):
@@ -323,10 +322,6 @@ def test_noisy_agents_epoch(transitionMatrixTreeList, n_testing_steps, rules, ba
 
             game.run(i, n_testing_steps)
             scores.append(game.state.getScore())
-
-            if record:
-                saveRecordings(transitionMatrixTree, game,
-                               layout, record + f"-{i}_round.pkl")
 
         across_agents_scores.append(np.asarray(scores))
 
@@ -453,8 +448,8 @@ def runLearnability(bars, barName, barArgs, ball, layout, display, file_to_be_lo
                 transitionMatrixTree, n_testing_steps, rules, [bars["test"]["bar"],bars["test"]["computerbar"]] , ball, layout, display))
             stats[i][j] = score
             
-            #with open(args['outputStats'] +
-            #       f"{i}_training_agent_{j}_epoch.json", 'w') as f:
+            # with open(args['outputStats'] +
+            #    f"{i}_training_agent_{j}_epoch.json", 'w') as f:
             #    json.dump(bars["test"]["bar"].agent.q_values, f)
         
         print('trained agent ', i)
@@ -528,9 +523,12 @@ def runGeneralization(bars, barName, barArgs, ball, layout, display, file_to_be_
     __main__.__dict__['_display'] = display
 
     rules = PongClassicGameRules(timeout)
-
+    
     stats = np.zeros(
         [trained_agents, len(GENERALIZATION_WORLDS), epochs // n_training_steps], dtype=np.float32)
+    
+    if not os.path.exists(args['outputStats'].split('/')[0]):
+        os.makedirs(args['outputStats'].split('/')[0])
 
     for i in range(trained_agents):
         transitionMatrixTreeList = []
@@ -551,6 +549,11 @@ def runGeneralization(bars, barName, barArgs, ball, layout, display, file_to_be_
             print(j)
             train_epoch(transitionMatrixTreeList[0], n_training_steps,
                             rules,  [bars["test"]["bar"], bars["test"]["computerbar"]], ball, layout, display)
+            
+            # with open(args['outputStats'] +
+            #        f"{i}_training_agent_{j}_epoch.json", 'w') as f:
+            #     json.dump(bars["test"]["bar"].agent.q_values, f)
+
             scores = test_noisy_agents_epoch(
                 transitionMatrixTreeList[1:], n_testing_steps, rules, [bars["test"]["bar"], bars["test"]["computerbar"]], ball, layout, display)
             for k in range(len(scores)):
@@ -665,24 +668,24 @@ if __name__ == '__main__':
     if args['mode'] == 'l':
         output = runLearnability(args['bars'], args['barAgentName'], args['agentOpts'],
                                  args['ball'], args['layout'], args['display'], file_to_be_loaded=args['pretrainedAgentName'], applyperturb=args['perturbOpts'], **args['statOpts'])
-        np.savetxt(args['outputStats']+".pkl", output,  delimiter=',')
+        # np.savetxt(args['outputStats']+".pkl", output,  delimiter=',')
     elif args['mode'] == 's':
         output = runStatistics(args['bars'], args['barAgentName'], args['agentOpts'],
                                args['ball'], args['layout'], args['display'], file_to_be_loaded=args['pretrainedAgentName'], applyperturb=args['perturbOpts'], **args['statOpts'])
-        np.savetxt(args['outputStats']+".pkl", output,  delimiter=',')
+        # np.savetxt(args['outputStats']+".pkl", output,  delimiter=',')
     elif args['mode'] == 'm':
         output = newTrainingMethod(args['bars'], args['barAgentName'], args['agentOpts'],
                                args['ball'], args['layout'], args['display'], file_to_be_loaded=args['pretrainedAgentName'], applyperturb=args['perturbOpts'], **args['statOpts'])
-        np.savetxt(args['outputStats']+".pkl", output,  delimiter=',')
+        # np.savetxt(args['outputStats']+".pkl", output,  delimiter=',')
     elif args['mode'] == 'e':
         output = runEnsembleAgents(args['bars'], args['barAgentName'], args['agentOpts'],
                                args['ball'], args['layout'], args['display'], file_to_be_loaded=args['pretrainedAgentName'], applyperturb=args['perturbOpts'], **args['statOpts'])
-        np.savetxt(args['outputStats']+".pkl", output,  delimiter=',')
+        # np.savetxt(args['outputStats']+".pkl", output,  delimiter=',')
     elif args['mode'] == 'g':
         output = runGeneralization(args['bars'], args['barAgentName'], args['agentOpts'],
                                   args['ball'], args['layout'], args['display'], file_to_be_loaded=args['pretrainedAgentName'], applyperturb=args['perturbOpts'], **args['statOpts'])
-        for n in range(len(GENERALIZATION_WORLDS)):
-            np.savetxt(args['outputStats'] +
-                       f"_{GENERALIZATION_WORLDS[n]}"+".pkl", output[n],  delimiter=',')
+        # for n in range(len(GENERALIZATION_WORLDS)):
+        #     np.savetxt(args['outputStats'] +
+        #                f"_{GENERALIZATION_WORLDS[n]}"+".pkl", output[n],  delimiter=',')
 
     pass

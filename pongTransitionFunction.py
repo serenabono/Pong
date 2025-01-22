@@ -188,7 +188,7 @@ class TransitionMatrixDicTree():
                 self.startingIndex, currentelementhash, [], currentelementhash, prob=1)
 
         self.factorLegal = len(self.transitionMatrixDic.keys())
-        print("number of states: ", self.factorLegal)
+        print(f"#states: {self.factorLegal}")
 
         if self.swaps:
             self.computeCompleteMatrixSwaps()
